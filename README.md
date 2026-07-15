@@ -19,15 +19,15 @@ Air traffic and aviation weather data are public, abundant and unreadable. A rep
 The project is built as independent modules, each with a single responsibility:
 
 | Module | Responsibility |
-|———|-—————|
-| `config.py` | Loads secrets and configuration |
-| `opensky.py` | Client for the live air traffic API (OAuth2) |
-| `weather.py` | Client for the aviation weather API (METAR) |
-| `llm.py` | LLM provider adapter — swappable in one file |
-| `rag.py` | Knowledge ingestion + semantic search (Chroma) |
-| `briefing.py` | Airspace briefing logic |
-| `decoder.py` | RAG-grounded METAR decoding |
-| `main.py` | Entry point |
+| --- | --- |
+| config.py | Loads secrets and configuration |
+| opensky.py | Client for the live air traffic API (OAuth2) |
+| weather.py | Client for the aviation weather API (METAR) |
+| llm.py | LLM provider adapter — swappable in one file |
+| rag.py | Knowledge ingestion + semantic search (Chroma) |
+| briefing.py | Airspace briefing logic |
+| decoder.py | RAG-grounded METAR decoding |
+| main.py | Entry point |
 
 The LLM layer is deliberately isolated: the project was validated by switching providers without touching the rest of the code.
 
