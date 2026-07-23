@@ -2,6 +2,7 @@ from opensky import get_token, get_aircraft
 from weather import get_metar
 from briefing import generate_briefing
 from decoder import decode_metar
+from agent import run_agent
 
 # Brazil (full country)
 LAT_MIN, LAT_MAX = -34.0, 6.0
@@ -26,3 +27,10 @@ for airport in AIRPORTS:
 # --- Briefing ---
 print(f"\n--- BRIEFING ({LANGUAGE.upper()}) ---")
 print(generate_briefing(aircraft, REGION, LANGUAGE))
+
+print("\n--- AGENT ---")
+print(run_agent("Como está o tempo para pouso em Porto Alegre?"))
+print()
+print(run_agent("Quantos aviões existem no total?"))
+print(run_agent("Quantos aviões estão sobre o Rio de Janeiro agora?"))
+print(run_agent("O tempo está bom para pousar em Guarulhos?"))
