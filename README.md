@@ -61,30 +61,37 @@ Python · Chroma (vector database) · OpenSky Network API · Aviation Weather Ce
 
 ## Running locally
 
-**Prerequisites:** Python 3.11 or newer, plus API credentials (see step 3).
+**Prerequisites:** Python 3.11 or newer, plus API credentials.
 
 **1. Clone and enter the project**
+
    git clone https://github.com/eliserps/airspace-copilot.git
-   cd airspace-copilot
    
-**2. Create and activate a virtual environment**
+**2. cd airspace-copilot**
+
+**3. Create and activate a virtual environment**
+
    python -m venv .venv
-   # Windows (PowerShell): .venv\Scripts\Activate.ps1
-   # macOS / Linux: source .venv/bin/activate
+   - Windows (PowerShell): .venv\Scripts\Activate.ps1
+   - macOS / Linux: source .venv/bin/activate
    
-**3. Install dependencies**
+ **4. Install dependencies**
    pip install -r requirements.txt
    
-**4. Set up your credentials.** Create a file named `.env` in the project root with:
+ **5. Set up your credentials.** Create a file named `.env` in the project root with:
+ 
    GROQ_API_KEY=your_groq_key
    OPENSKY_CLIENT_ID=your_opensky_client_id
    OPENSKY_CLIENT_SECRET=your_opensky_client_secret
+   
 Get a Groq key at https://console.groq.com and OpenSky credentials at https://opensky-network.org (Account → API Client).
 
-**5. Build the knowledge base (one time).** This reads the reference docs, creates embeddings and stores them in Chroma:
+**6. Build the knowledge base (one time).** This reads the reference docs, creates embeddings and stores them in Chroma:
+
    python src/rag.py
    
-**6. Run the project**
+**7. Run the project**
+
    python src/main.py
    
 You should see live aircraft counts, decoded weather, a bilingual airspace briefing and the agent answering natural-language questions in your terminal.
