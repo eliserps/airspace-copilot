@@ -1,0 +1,88 @@
+"""The shared flat error shape, and the exception handlers that enforce it.
+
+Every failure the API returns looks the same:
+
+    {"error": "<stable_slug>", "message": "<human readable>", ...context}
+
+`error` is a machine-readable slug the frontend branches on; `message` is for
+humans. FastAPI nests errors under `detail` by default, which would give clients
+two different shapes depending on whether the error came from us or from
+validation. These handlers flatten that to one.
+"""
+
+import requests
+from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+SOURCE_OPENSKY = "OpenSky (partial volunteer coverage)"
+SOURCE_AWC = "Aviation Weather Center"
+
+
+def error_detail(error: str, message: str, **context) -> dict:
+    """Builds the body for an HTTPException detail.
+
+    Keeping the shape in one function means a new endpoint cannot accidentally
+    invent a different error format.
+    """
+    return {"error": error, "message": message, **context}
+
+
+def unknown_region(region: str, allowed: list[str]) -> HTTPException:
+    """404 for a region with no bounding box defined."""
+    return HTTPException(
+        status_code=404,
+        detail=error_detail(
+            "unknown_region", f"Unknown region '{region}'.", allowed=sorted(allowed)
+        ),
+    )
+
+
+def invalid_language(allowed: tuple[str, ...]) -> HTTPException:
+    """422 for an unsupported language code."""
+    return HTTPException(
+        status_code=422,
+        detail=error_detail(
+            "invalid_language",
+            f"lang must be one of {list(allowed)}.",
+            allowed=list(allowed),
+        ),
+    )
+
+
+def register_error_handlers(app: FastAPI) -> None:
+    """Attaches the handlers that flatten every error to the shared shape."""
+
+    @app.exception_handler(HTTPException)
+    async def http_error_handler(request, exc: HTTPException):
+        if isinstance(exc.detail, dict):
+            return JSONResponse(status_code=exc.status_code, content=exc.detail)
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"error": "http_error", "message": str(exc.detail)},
+        )
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error_handler(request, exc: RequestValidationError):
+        first = exc.errors()[0] if exc.errors() else {}
+        field = ".".join(str(p) for p in first.get("loc", []) if p != "body")
+        return JSONResponse(
+            status_code=422,
+            content={"error": "invalid_request",
+                     "message": first.get("msg", "Invalid request."),
+                     "field": field or None},
+        )
+
+    @app.exception_handler(requests.RequestException)
+    async def upstream_error_handler(request, exc: requests.RequestException):
+        """Upstream network failure becomes 503, never a 500 stack trace.
+
+        OpenSky auth and state fetches call raise_for_status(), so they raise
+        rather than returning None. Without this the client gets an opaque 500.
+        """
+        return JSONResponse(
+            status_code=503,
+            content={"error": "upstream_unavailable",
+                     "message": "A data source is unavailable right now. "
+                                "Try again shortly."},
+        )

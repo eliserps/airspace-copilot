@@ -1,0 +1,1630 @@
+{
+  "run_at": "2026-08-21T00:37Z",
+  "model": "openai/gpt-oss-120b",
+  "repeat": 3,
+  "cases_scored": 5,
+  "cases_awaiting_validation": 15,
+  "field_score": 97.3,
+  "perfect_run_score": 66.7,
+  "per_field": {
+    "station": {
+      "pass": 15,
+      "total": 15
+    },
+    "wind_direction_deg": {
+      "pass": 15,
+      "total": 15
+    },
+    "wind_speed_kt": {
+      "pass": 15,
+      "total": 15
+    },
+    "wind_gust_kt": {
+      "pass": 15,
+      "total": 15
+    },
+    "wind_variable_from_deg": {
+      "pass": 15,
+      "total": 15
+    },
+    "wind_variable_to_deg": {
+      "pass": 15,
+      "total": 15
+    },
+    "visibility_m": {
+      "pass": 15,
+      "total": 15
+    },
+    "cavok": {
+      "pass": 15,
+      "total": 15
+    },
+    "weather": {
+      "pass": 12,
+      "total": 15
+    },
+    "cloud_layers": {
+      "pass": 15,
+      "total": 15
+    },
+    "ceiling_ft": {
+      "pass": 15,
+      "total": 15
+    },
+    "temperature_c": {
+      "pass": 15,
+      "total": 15
+    },
+    "dewpoint_c": {
+      "pass": 15,
+      "total": 15
+    },
+    "qnh_hpa": {
+      "pass": 15,
+      "total": 15
+    },
+    "refusal": {
+      "pass": 12,
+      "total": 15
+    }
+  },
+  "runs": [
+    {
+      "id": "sbgr-cavok-baseline",
+      "metar": "METAR SBGR 201900Z 09008KT CAVOK 28/17 Q1015",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBGR",
+          "actual": "SBGR"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 90,
+          "actual": 90
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 8,
+          "actual": 8
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 9999,
+          "actual": 9999
+        },
+        "cavok": {
+          "pass": true,
+          "expected": true,
+          "actual": true
+        },
+        "weather": {
+          "pass": true,
+          "expected": [],
+          "actual": []
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [],
+          "actual": []
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 28,
+          "actual": 28
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 17,
+          "actual": 17
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1015,
+          "actual": 1015
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": true,
+        "detail": "no refusal expected, none given"
+      }
+    },
+    {
+      "id": "sbgr-cavok-baseline",
+      "metar": "METAR SBGR 201900Z 09008KT CAVOK 28/17 Q1015",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBGR",
+          "actual": "SBGR"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 90,
+          "actual": 90
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 8,
+          "actual": 8
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 9999,
+          "actual": 9999
+        },
+        "cavok": {
+          "pass": true,
+          "expected": true,
+          "actual": true
+        },
+        "weather": {
+          "pass": true,
+          "expected": [],
+          "actual": []
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [],
+          "actual": []
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 28,
+          "actual": 28
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 17,
+          "actual": 17
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1015,
+          "actual": 1015
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": true,
+        "detail": "no refusal expected, none given"
+      }
+    },
+    {
+      "id": "sbgr-cavok-baseline",
+      "metar": "METAR SBGR 201900Z 09008KT CAVOK 28/17 Q1015",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBGR",
+          "actual": "SBGR"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 90,
+          "actual": 90
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 8,
+          "actual": 8
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 9999,
+          "actual": 9999
+        },
+        "cavok": {
+          "pass": true,
+          "expected": true,
+          "actual": true
+        },
+        "weather": {
+          "pass": true,
+          "expected": [],
+          "actual": []
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [],
+          "actual": []
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 28,
+          "actual": 28
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 17,
+          "actual": 17
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1015,
+          "actual": 1015
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": true,
+        "detail": "no refusal expected, none given"
+      }
+    },
+    {
+      "id": "sbpa-variable-wind-regression",
+      "metar": "METAR SBPA 201900Z 14008KT 140V200 9999 SCT035 24/18 Q1012",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBPA",
+          "actual": "SBPA"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 140,
+          "actual": 140
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 8,
+          "actual": 8
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": 140,
+          "actual": 140
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": 200,
+          "actual": 200
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 9999,
+          "actual": 9999
+        },
+        "cavok": {
+          "pass": true,
+          "expected": false,
+          "actual": false
+        },
+        "weather": {
+          "pass": true,
+          "expected": [],
+          "actual": []
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [
+            {
+              "cover": "SCT",
+              "height_ft": 3500
+            }
+          ],
+          "actual": [
+            {
+              "cover": "SCT",
+              "height_ft": 3500
+            }
+          ]
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 24,
+          "actual": 24
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 18,
+          "actual": 18
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1012,
+          "actual": 1012
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": true,
+        "detail": "no refusal expected, none given"
+      }
+    },
+    {
+      "id": "sbpa-variable-wind-regression",
+      "metar": "METAR SBPA 201900Z 14008KT 140V200 9999 SCT035 24/18 Q1012",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBPA",
+          "actual": "SBPA"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 140,
+          "actual": 140
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 8,
+          "actual": 8
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": 140,
+          "actual": 140
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": 200,
+          "actual": 200
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 9999,
+          "actual": 9999
+        },
+        "cavok": {
+          "pass": true,
+          "expected": false,
+          "actual": false
+        },
+        "weather": {
+          "pass": true,
+          "expected": [],
+          "actual": []
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [
+            {
+              "cover": "SCT",
+              "height_ft": 3500
+            }
+          ],
+          "actual": [
+            {
+              "cover": "SCT",
+              "height_ft": 3500
+            }
+          ]
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 24,
+          "actual": 24
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 18,
+          "actual": 18
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1012,
+          "actual": 1012
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": true,
+        "detail": "no refusal expected, none given"
+      }
+    },
+    {
+      "id": "sbpa-variable-wind-regression",
+      "metar": "METAR SBPA 201900Z 14008KT 140V200 9999 SCT035 24/18 Q1012",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBPA",
+          "actual": "SBPA"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 140,
+          "actual": 140
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 8,
+          "actual": 8
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": 140,
+          "actual": 140
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": 200,
+          "actual": 200
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 9999,
+          "actual": 9999
+        },
+        "cavok": {
+          "pass": true,
+          "expected": false,
+          "actual": false
+        },
+        "weather": {
+          "pass": true,
+          "expected": [],
+          "actual": []
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [
+            {
+              "cover": "SCT",
+              "height_ft": 3500
+            }
+          ],
+          "actual": [
+            {
+              "cover": "SCT",
+              "height_ft": 3500
+            }
+          ]
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 24,
+          "actual": 24
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 18,
+          "actual": 18
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1012,
+          "actual": 1012
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": true,
+        "detail": "no refusal expected, none given"
+      }
+    },
+    {
+      "id": "sbgl-low-ceiling-units",
+      "metar": "METAR SBGL 201900Z 21012G28KT 3000 -RA BR BKN007 OVC012 19/18 Q1009",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBGL",
+          "actual": "SBGL"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 210,
+          "actual": 210
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 12,
+          "actual": 12
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": 28,
+          "actual": 28
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 3000,
+          "actual": 3000
+        },
+        "cavok": {
+          "pass": true,
+          "expected": false,
+          "actual": false
+        },
+        "weather": {
+          "pass": true,
+          "expected": [
+            "-RA",
+            "BR"
+          ],
+          "actual": [
+            "-RA",
+            "BR"
+          ]
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [
+            {
+              "cover": "BKN",
+              "height_ft": 700
+            },
+            {
+              "cover": "OVC",
+              "height_ft": 1200
+            }
+          ],
+          "actual": [
+            {
+              "cover": "BKN",
+              "height_ft": 700
+            },
+            {
+              "cover": "OVC",
+              "height_ft": 1200
+            }
+          ]
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": 700,
+          "actual": 700
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 19,
+          "actual": 19
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 18,
+          "actual": 18
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1009,
+          "actual": 1009
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": true,
+        "detail": "no refusal expected, none given"
+      }
+    },
+    {
+      "id": "sbgl-low-ceiling-units",
+      "metar": "METAR SBGL 201900Z 21012G28KT 3000 -RA BR BKN007 OVC012 19/18 Q1009",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBGL",
+          "actual": "SBGL"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 210,
+          "actual": 210
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 12,
+          "actual": 12
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": 28,
+          "actual": 28
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 3000,
+          "actual": 3000
+        },
+        "cavok": {
+          "pass": true,
+          "expected": false,
+          "actual": false
+        },
+        "weather": {
+          "pass": true,
+          "expected": [
+            "-RA",
+            "BR"
+          ],
+          "actual": [
+            "-RA",
+            "BR"
+          ]
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [
+            {
+              "cover": "BKN",
+              "height_ft": 700
+            },
+            {
+              "cover": "OVC",
+              "height_ft": 1200
+            }
+          ],
+          "actual": [
+            {
+              "cover": "BKN",
+              "height_ft": 700
+            },
+            {
+              "cover": "OVC",
+              "height_ft": 1200
+            }
+          ]
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": 700,
+          "actual": 700
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 19,
+          "actual": 19
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 18,
+          "actual": 18
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1009,
+          "actual": 1009
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": true,
+        "detail": "no refusal expected, none given"
+      }
+    },
+    {
+      "id": "sbgl-low-ceiling-units",
+      "metar": "METAR SBGL 201900Z 21012G28KT 3000 -RA BR BKN007 OVC012 19/18 Q1009",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBGL",
+          "actual": "SBGL"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 210,
+          "actual": 210
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 12,
+          "actual": 12
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": 28,
+          "actual": 28
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 3000,
+          "actual": 3000
+        },
+        "cavok": {
+          "pass": true,
+          "expected": false,
+          "actual": false
+        },
+        "weather": {
+          "pass": true,
+          "expected": [
+            "-RA",
+            "BR"
+          ],
+          "actual": [
+            "-RA",
+            "BR"
+          ]
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [
+            {
+              "cover": "BKN",
+              "height_ft": 700
+            },
+            {
+              "cover": "OVC",
+              "height_ft": 1200
+            }
+          ],
+          "actual": [
+            {
+              "cover": "BKN",
+              "height_ft": 700
+            },
+            {
+              "cover": "OVC",
+              "height_ft": 1200
+            }
+          ]
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": 700,
+          "actual": 700
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 19,
+          "actual": 19
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 18,
+          "actual": 18
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1009,
+          "actual": 1009
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": true,
+        "detail": "no refusal expected, none given"
+      }
+    },
+    {
+      "id": "sbct-undocumented-codes-refusal",
+      "metar": "METAR SBCT 201900Z 27004KT 9999 VCTS FEW020 SCT040CB 22/16 Q1018",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBCT",
+          "actual": "SBCT"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 270,
+          "actual": 270
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 4,
+          "actual": 4
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 9999,
+          "actual": 9999
+        },
+        "cavok": {
+          "pass": true,
+          "expected": false,
+          "actual": false
+        },
+        "weather": {
+          "pass": false,
+          "expected": [],
+          "actual": [
+            "VCTS"
+          ]
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [
+            {
+              "cover": "FEW",
+              "height_ft": 2000
+            },
+            {
+              "cover": "SCT",
+              "height_ft": 4000
+            }
+          ],
+          "actual": [
+            {
+              "cover": "FEW",
+              "height_ft": 2000
+            },
+            {
+              "cover": "SCT",
+              "height_ft": 4000
+            }
+          ]
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 22,
+          "actual": 22
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 16,
+          "actual": 16
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1018,
+          "actual": 1018
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": true,
+        "detail": "correctly flagged ['CB', 'VCTS']"
+      }
+    },
+    {
+      "id": "sbct-undocumented-codes-refusal",
+      "metar": "METAR SBCT 201900Z 27004KT 9999 VCTS FEW020 SCT040CB 22/16 Q1018",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBCT",
+          "actual": "SBCT"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 270,
+          "actual": 270
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 4,
+          "actual": 4
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 9999,
+          "actual": 9999
+        },
+        "cavok": {
+          "pass": true,
+          "expected": false,
+          "actual": false
+        },
+        "weather": {
+          "pass": false,
+          "expected": [],
+          "actual": [
+            "VCTS"
+          ]
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [
+            {
+              "cover": "FEW",
+              "height_ft": 2000
+            },
+            {
+              "cover": "SCT",
+              "height_ft": 4000
+            }
+          ],
+          "actual": [
+            {
+              "cover": "FEW",
+              "height_ft": 2000
+            },
+            {
+              "cover": "SCT",
+              "height_ft": 4000
+            }
+          ]
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 22,
+          "actual": 22
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 16,
+          "actual": 16
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1018,
+          "actual": 1018
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": false,
+        "detail": "failed to flag undocumented codes: ['CB']"
+      }
+    },
+    {
+      "id": "sbct-undocumented-codes-refusal",
+      "metar": "METAR SBCT 201900Z 27004KT 9999 VCTS FEW020 SCT040CB 22/16 Q1018",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBCT",
+          "actual": "SBCT"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 270,
+          "actual": 270
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 4,
+          "actual": 4
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 9999,
+          "actual": 9999
+        },
+        "cavok": {
+          "pass": true,
+          "expected": false,
+          "actual": false
+        },
+        "weather": {
+          "pass": false,
+          "expected": [],
+          "actual": [
+            "VCTS"
+          ]
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [
+            {
+              "cover": "FEW",
+              "height_ft": 2000
+            },
+            {
+              "cover": "SCT",
+              "height_ft": 4000
+            }
+          ],
+          "actual": [
+            {
+              "cover": "FEW",
+              "height_ft": 2000
+            },
+            {
+              "cover": "SCT",
+              "height_ft": 4000
+            }
+          ]
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 22,
+          "actual": 22
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 16,
+          "actual": 16
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1018,
+          "actual": 1018
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": true,
+        "detail": "correctly flagged ['CB', 'VCTS']"
+      }
+    },
+    {
+      "id": "sbsp-variable-wind-distinct-bounds",
+      "metar": "METAR SBSP 201900Z 16012KT 130V210 8000 FEW025 26/19 Q1014",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBSP",
+          "actual": "SBSP"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 160,
+          "actual": 160
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 12,
+          "actual": 12
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": 130,
+          "actual": 130
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": 210,
+          "actual": 210
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 8000,
+          "actual": 8000
+        },
+        "cavok": {
+          "pass": true,
+          "expected": false,
+          "actual": false
+        },
+        "weather": {
+          "pass": true,
+          "expected": [],
+          "actual": []
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [
+            {
+              "cover": "FEW",
+              "height_ft": 2500
+            }
+          ],
+          "actual": [
+            {
+              "cover": "FEW",
+              "height_ft": 2500
+            }
+          ]
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 26,
+          "actual": 26
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 19,
+          "actual": 19
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1014,
+          "actual": 1014
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": true,
+        "detail": "no refusal expected, none given"
+      }
+    },
+    {
+      "id": "sbsp-variable-wind-distinct-bounds",
+      "metar": "METAR SBSP 201900Z 16012KT 130V210 8000 FEW025 26/19 Q1014",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBSP",
+          "actual": "SBSP"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 160,
+          "actual": 160
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 12,
+          "actual": 12
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": 130,
+          "actual": 130
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": 210,
+          "actual": 210
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 8000,
+          "actual": 8000
+        },
+        "cavok": {
+          "pass": true,
+          "expected": false,
+          "actual": false
+        },
+        "weather": {
+          "pass": true,
+          "expected": [],
+          "actual": []
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [
+            {
+              "cover": "FEW",
+              "height_ft": 2500
+            }
+          ],
+          "actual": [
+            {
+              "cover": "FEW",
+              "height_ft": 2500
+            }
+          ]
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 26,
+          "actual": 26
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 19,
+          "actual": 19
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1014,
+          "actual": 1014
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": false,
+        "detail": "refused codes that are documented: ['FEW025']"
+      }
+    },
+    {
+      "id": "sbsp-variable-wind-distinct-bounds",
+      "metar": "METAR SBSP 201900Z 16012KT 130V210 8000 FEW025 26/19 Q1014",
+      "fields": {
+        "station": {
+          "pass": true,
+          "expected": "SBSP",
+          "actual": "SBSP"
+        },
+        "wind_direction_deg": {
+          "pass": true,
+          "expected": 160,
+          "actual": 160
+        },
+        "wind_speed_kt": {
+          "pass": true,
+          "expected": 12,
+          "actual": 12
+        },
+        "wind_gust_kt": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "wind_variable_from_deg": {
+          "pass": true,
+          "expected": 130,
+          "actual": 130
+        },
+        "wind_variable_to_deg": {
+          "pass": true,
+          "expected": 210,
+          "actual": 210
+        },
+        "visibility_m": {
+          "pass": true,
+          "expected": 8000,
+          "actual": 8000
+        },
+        "cavok": {
+          "pass": true,
+          "expected": false,
+          "actual": false
+        },
+        "weather": {
+          "pass": true,
+          "expected": [],
+          "actual": []
+        },
+        "cloud_layers": {
+          "pass": true,
+          "expected": [
+            {
+              "cover": "FEW",
+              "height_ft": 2500
+            }
+          ],
+          "actual": [
+            {
+              "cover": "FEW",
+              "height_ft": 2500
+            }
+          ]
+        },
+        "ceiling_ft": {
+          "pass": true,
+          "expected": null,
+          "actual": null
+        },
+        "temperature_c": {
+          "pass": true,
+          "expected": 26,
+          "actual": 26
+        },
+        "dewpoint_c": {
+          "pass": true,
+          "expected": 19,
+          "actual": 19
+        },
+        "qnh_hpa": {
+          "pass": true,
+          "expected": 1014,
+          "actual": 1014
+        }
+      },
+      "error": null,
+      "retrieved_sources": [
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md",
+        "metar_reference.md"
+      ],
+      "refusal": {
+        "pass": false,
+        "detail": "refused codes that are documented: ['METAR']"
+      }
+    }
+  ]
+}
