@@ -86,3 +86,22 @@ def register_error_handlers(app: FastAPI) -> None:
                      "message": "A data source is unavailable right now. "
                                 "Try again shortly."},
         )
+
+    @app.exception_handler(requests.HTTPError)
+    async def upstream_http_error_handler(request, exc: requests.HTTPError):
+        """Maps a 429 from OpenSky to its own slug, everything else to 503."""
+        status = exc.response.status_code if exc.response is not None else None
+        if status == 429:
+            return JSONResponse(
+                status_code=429,
+                content={"error": "rate_limited",
+                         "message": "OpenSky's request limit for this account "
+                                    "has been reached. Live positions resume "
+                                    "once the quota resets."},
+            )
+        return JSONResponse(
+            status_code=503,
+            content={"error": "upstream_unavailable",
+                     "message": "A data source is unavailable right now. "
+                                "Try again shortly."},
+        )

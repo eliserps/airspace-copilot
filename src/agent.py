@@ -1,7 +1,7 @@
 import json
 from llm_tools import chat_with_tools
 from weather import get_metar
-from tools import count_aircraft
+from tools import REGIONS, count_aircraft
 
 SYSTEM_PROMPT = """You are an airspace assistant.
 
@@ -47,8 +47,7 @@ TOOLS = [
                "properties": {
                    "region": {
                        "type": "string",
-                       "enum": ["brazil", "sao_paulo", "rio_de_janeiro",
-                                "porto_alegre", "brasilia"],
+                       "enum": sorted(REGIONS),
                        "description": "The region to check.",
                    }
                },

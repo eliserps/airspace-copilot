@@ -11,7 +11,7 @@ router = APIRouter(tags=["airspace"])
 
 
 @router.get("/aircraft", response_model=AircraftSummaryResponse)
-def aircraft(region: str = Query("brazil", description="One of the regions from /health.")):
+def aircraft(region: str = Query("south_america", description="One of the regions from /health.")):
     """Aircraft currently detected over a region, as a text summary."""
     if region.lower().strip() not in REGIONS:
         raise unknown_region(region, list(REGIONS))
@@ -24,7 +24,7 @@ def aircraft(region: str = Query("brazil", description="One of the regions from 
 
 
 @router.get("/aircraft/map", response_model=AircraftMapResponse)
-def aircraft_map(region: str = Query("brazil", description="One of the regions from /health.")):
+def aircraft_map(region: str = Query("south_america", description="One of the regions from /health.")):
     """Aircraft over a region as objects with coordinates, for plotting pins."""
     try:
         planes = list_aircraft(region)
