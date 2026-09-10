@@ -129,6 +129,26 @@ Then open:
 - **Interactive docs:** http://127.0.0.1:8000/docs
 - **Health check:** http://127.0.0.1:8000/health
 
+## Running the web UI
+
+The React frontend lives in `frontend/airscape-copilot-frontend/` and is a pure
+client of the API above — it holds no credentials of its own. Keep the API
+running in one terminal, then in a second one:
+
+    cd frontend/airscape-copilot-frontend
+    npm install
+    npm run dev
+
+`frontend/airscape-copilot-frontend/.env.local` points it at
+`http://localhost:8000`; the committed `.env` holds the deployed URL, and Vite
+prefers `.env.local` for local work.
+
+**Credentials stay in the backend.** `GROQ_API_KEY`, `OPENSKY_CLIENT_ID` and
+`OPENSKY_CLIENT_SECRET` are read only by `src/config.py` from the root `.env`.
+Vite inlines every `VITE_`-prefixed variable into the bundle the browser
+downloads, so that prefix belongs only to public values such as the API address —
+never to a key.
+
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | GET | `/health` | Status, plus the valid regions and languages |

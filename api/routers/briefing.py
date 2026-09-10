@@ -13,7 +13,7 @@ router = APIRouter(tags=["airspace"])
 
 @router.get("/briefing", response_model=BriefingResponse)
 def briefing(
-    region: str = Query("brazil", description="One of the regions from /health."),
+    region: str = Query("south_america", description="One of the regions from /health."),
     lang: str = Query("en", description="'en' or 'pt'."),
 ):
     """Natural-language briefing of current traffic over a region."""

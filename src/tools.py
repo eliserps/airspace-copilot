@@ -2,11 +2,12 @@ import time
 from opensky import get_token, get_aircraft
 
 REGIONS = {
-   "brazil": (-34.0, 6.0, -74.0, -34.0),
-   "sao_paulo": (-24.5, -22.5, -48.0, -45.5),
-   "rio_de_janeiro": (-23.5, -21.5, -44.5, -42.0),
-   "porto_alegre": (-31.0, -29.5, -51.5, -50.0),
-   "brasilia": (-16.5, -15.0, -48.5, -47.0),
+   "south_america": (-56.0, 13.0, -82.0, -34.0),
+   "north_america": (24.0, 60.0, -130.0, -60.0),
+   "europe": (35.0, 60.0, -10.0, 30.0),
+   "africa": (-35.0, 37.0, -18.0, 52.0),
+   "asia": (5.0, 55.0, 60.0, 145.0),
+   "oceania": (-47.0, -8.0, 110.0, 180.0),
 }
 
 _token_cache = {"value": None, "expires_at": 0}
