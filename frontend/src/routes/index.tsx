@@ -13,7 +13,8 @@ import {
   Plane,
   TriangleAlert,
 } from "lucide-react";
-import { REGIONS, DEFAULT_REGION, type Region } from "@/config";
+import { REGIONS, DEFAULT_REGION, MAX_GLOBE_MARKERS, type Region } from "@/config";
+import { sampleSpread } from "@/lib/markers";
 import { api, ApiError } from "@/lib/api";
 import { ChatPanel } from "@/components/ChatPanel";
 import { BriefingPanel } from "@/components/BriefingPanel";
@@ -78,8 +79,15 @@ function Index() {
   const aircraft = useMemo(() => traffic.data?.aircraft ?? [], [traffic.data]);
   const selected = aircraft.find((a) => a.icao24 === selectedId) ?? null;
 
+  const globeAircraft = useMemo(() => {
+    if (aircraft.length <= MAX_GLOBE_MARKERS) return aircraft;
+    const sample = sampleSpread(aircraft, MAX_GLOBE_MARKERS);
+    if (selected && !sample.includes(selected)) sample.push(selected);
+    return sample;
+  }, [aircraft, selected]);
+
   return (
-    <main className="flex min-h-screen flex-col">
+    <main className="flex min-h-screen flex-col lg:h-screen">
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-[1800px] flex-wrap items-center gap-3 px-4 py-3">
           <div className="flex items-center gap-2.5">
@@ -165,14 +173,13 @@ function Index() {
         </div>
       </header>
 
-      <div className="mx-auto flex w-full max-w-[1800px] flex-1 flex-col gap-4 p-4 lg:flex-row">
-        {}
+      <div className="mx-auto flex w-full max-w-[1800px] flex-1 flex-col gap-4 p-4 lg:min-h-0 lg:flex-row">
         <section className="panel relative h-[52vh] min-h-[320px] overflow-hidden lg:h-auto lg:min-h-[560px] lg:flex-1">
           <div className="absolute inset-0">
             <ClientOnly fallback={<LoadingState label={t("state.globe")} />}>
               <Suspense fallback={<LoadingState label={t("state.globe")} />}>
                 <GlobeView
-                  aircraft={aircraft}
+                  aircraft={globeAircraft}
                   region={region}
                   selectedId={selectedId}
                   onSelect={(id) => setSelectedId(id)}
@@ -221,6 +228,11 @@ function Index() {
             <LegendDot tone="bg-yellow" label={t("legend.low")} />
             <LegendDot tone="bg-orange" label={t("legend.mid")} />
             <LegendDot tone="bg-violet" label={t("legend.high")} />
+            {globeAircraft.length < aircraft.length ? (
+              <span className="font-mono text-[10px] text-muted-foreground/80">
+                {t("legend.sampled").replace("{shown}", String(MAX_GLOBE_MARKERS))}
+              </span>
+            ) : null}
             {traffic.data?.source ? (
               <span
                 className="font-mono text-[10px] text-muted-foreground/80"
@@ -240,7 +252,6 @@ function Index() {
           </div>
         </section>
 
-        {}
         <section className="panel flex h-[70vh] min-h-[420px] flex-col overflow-hidden lg:h-auto lg:w-[26rem] lg:shrink-0">
           <nav className="flex items-center gap-1 border-b border-border p-2">
             {TABS.map((tabDef) => {
@@ -292,7 +303,7 @@ function Index() {
                     message={
                       traffic.error instanceof ApiError
                         ? traffic.error.message
-                        : "Traffic feed unavailable."
+                        : t("state.trafficUnavailable")
                     }
                     onRetry={() => void traffic.refetch()}
                   />

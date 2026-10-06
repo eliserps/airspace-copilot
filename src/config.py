@@ -1,4 +1,3 @@
-
 import truststore
 truststore.inject_into_ssl()
 
@@ -11,9 +10,8 @@ load_dotenv(env_path)
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# Single source of truth for the model. Evaluation results are only comparable
-# across runs that used the same model, so this is recorded in eval reports.
-# Overridable via .env without touching code.
 LLM_MODEL = os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
 OPENSKY_CLIENT_ID = os.getenv("OPENSKY_CLIENT_ID")
 OPENSKY_CLIENT_SECRET = os.getenv("OPENSKY_CLIENT_SECRET")
+
+LANGUAGE_NAMES = {"en": "English", "pt": "Brazilian Portuguese"}

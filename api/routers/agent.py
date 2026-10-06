@@ -31,14 +31,10 @@ def ask(payload: AskRequest):
         )
 
     if checked["suspicious"]:
-        # Logged, not blocked: the patterns have false positives, and refusing
-        # outright would break legitimate questions. Counting attempts is the
-        # point -- silent handling would hide whether this is ever exercised.
         log.warning("possible injection attempt: flags=%s", checked["flags"])
 
     answer = run_agent(checked["question"])
 
-    # The agent's loop breaker can return None if the model emits no content.
     if not answer or not answer.strip():
         raise HTTPException(
             status_code=502,
@@ -48,8 +44,6 @@ def ask(payload: AskRequest):
             ),
         )
 
-    # Echo the original text, not the fenced version -- the wrapper is an internal
-    # detail and showing it back would be confusing.
     return {
         "question": checked["original"],
         "answer": answer,

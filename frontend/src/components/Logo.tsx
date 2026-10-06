@@ -21,11 +21,9 @@ export function Logo({ className }: { className?: string }) {
         </linearGradient>
       </defs>
 
-      {}
       <rect x="4" y="21.5" width="15" height="3.6" rx="1.8" fill="#A78BFA" opacity="0.85" />
       <rect x="11" y="26.4" width="17" height="3.2" rx="1.6" fill="#FDE047" opacity="0.7" />
 
-      {}
       <path
         d="M27 3.4 4.6 13.2a1 1 0 0 0 .07 1.85l6.2 2.2 15.9-13.6a.4.4 0 0 1 .55.6L14.1 18.9l.55 6.5a1 1 0 0 0 1.77.56l3.3-4.1 4.9 1.74a1 1 0 0 0 1.31-.78L28.5 4.5a1 1 0 0 0-1.5-1.1z"
         fill="url(#logo-plane)"

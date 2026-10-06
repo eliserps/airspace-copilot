@@ -1,5 +1,6 @@
 import json
 
+from config import LANGUAGE_NAMES
 from llm import ask
 from rag import search
 
@@ -22,8 +23,6 @@ STRICT RULES:
 - Answer with a single JSON object and nothing else.
 """
 
-# The field contract lives in evals/README.md. Units are in the field names on
-# purpose: unit errors (feet vs metres) are exactly what the eval must catch.
 STRUCTURED_SCHEMA = """Answer with a JSON object with EXACTLY these keys:
 
 {
@@ -54,12 +53,6 @@ Rules for the values:
 - Use null for absent values, not 0 and not "unknown"."""
 
 
-# A METAR query averages wind + visibility + cloud + pressure into one embedding,
-# so it matches no single section strongly. With n_results=4 the wind, visibility
-# and cloud sections were all missing from the context and the decoder correctly
-# refused to decode them. The reference is only ~11 chunks, so retrieving 8 is
-# cheap insurance. Proper fix (per-group retrieval) belongs in the tuning step,
-# after the eval can measure whether it helps.
 def _retrieve(metar: str, n_results: int = 8) -> tuple[str, list[dict]]:
    """Fetches reference chunks for a METAR and formats them as prompt context."""
    chunks = search(metar, n_results=n_results)
@@ -69,15 +62,22 @@ def _retrieve(metar: str, n_results: int = 8) -> tuple[str, list[dict]]:
    return context, chunks
 
 
+_DECODED_CACHE_MAX = 256
+_decoded_cache: dict[tuple[str, str], str] = {}
+
+
 def decode_metar(metar: str | None, language: str = "en") -> str:
    """Decodes a raw METAR into plain language, grounded in the reference docs."""
-   # GUARDRAIL: never send empty data to the model
    if not metar or not metar.strip():
        return "No METAR available for this airport right now."
 
+   key = (metar.strip(), language)
+   if key in _decoded_cache:
+       return _decoded_cache[key]
+
    context, _ = _retrieve(metar)
 
-   language_name = "English" if language == "en" else "Brazilian Portuguese"
+   language_name = LANGUAGE_NAMES[language]
 
    prompt = f"""Reference documentation:
 
@@ -91,7 +91,13 @@ Decode this METAR in {language_name}:
 
 Explain each element, then give a one-line operational summary."""
 
-   return ask(prompt, system_prompt=SYSTEM_PROMPT)
+   decoded = ask(prompt, system_prompt=SYSTEM_PROMPT, label="metar")
+
+   if decoded and decoded.strip():
+       if len(_decoded_cache) >= _DECODED_CACHE_MAX:
+           _decoded_cache.clear()
+       _decoded_cache[key] = decoded
+   return decoded
 
 
 def decode_metar_structured(metar: str | None) -> dict:

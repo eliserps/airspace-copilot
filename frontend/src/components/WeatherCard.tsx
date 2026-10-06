@@ -15,7 +15,7 @@ export function WeatherCard({ defaultIcao }: { defaultIcao: string }) {
     queryKey: ["weather", query, locale],
     queryFn: () => api.weather(query, locale),
     enabled: query.length >= 3,
-    staleTime: 120_000,
+    staleTime: 15 * 60_000,
   });
 
   return (
@@ -58,9 +58,9 @@ export function WeatherCard({ defaultIcao }: { defaultIcao: string }) {
         ) : !q.data?.raw && !q.data?.decoded ? (
           <EmptyState label={`${t("weather.noReport")} ${query}`} />
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            <section className="rounded-lg border border-border bg-surface-2/40 p-3">
-              <p className="label-caps mb-2">{t("weather.raw")}</p>
+          <div className="flex flex-col gap-3">
+            <section className="rounded-lg border border-border bg-surface-2/40 px-3 py-2">
+              <p className="label-caps mb-1">{t("weather.raw")}</p>
               <pre className="font-mono text-[0.78rem] leading-relaxed break-words whitespace-pre-wrap text-primary">
                 {q.data.raw || "—"}
               </pre>

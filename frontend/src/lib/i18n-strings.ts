@@ -80,6 +80,9 @@ export const STRINGS = {
     "region.africa": "Africa",
     "region.asia": "Asia",
     "region.oceania": "Oceania",
+    "region.world": "World",
+    "traffic.truncated": "Showing {shown} of {total} aircraft.",
+    "legend.sampled": "map sample: {shown}",
   },
   pt: {
     "app.tagline": "Monitoramento do espaço aéreo",
@@ -159,6 +162,9 @@ export const STRINGS = {
     "region.africa": "África",
     "region.asia": "Ásia",
     "region.oceania": "Oceania",
+    "region.world": "Mundo",
+    "traffic.truncated": "Mostrando {shown} de {total} aeronaves.",
+    "legend.sampled": "amostra no mapa: {shown}",
   },
 } as const;
 

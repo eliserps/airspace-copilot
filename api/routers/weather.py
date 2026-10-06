@@ -24,8 +24,6 @@ def weather(
     code = icao.upper()
     metar = get_metar(code)
 
-    # get_metar() returns None both when the airport has no report and when the
-    # service failed -- it cannot distinguish them, so neither can this endpoint.
     if not metar:
         raise HTTPException(
             status_code=404,
