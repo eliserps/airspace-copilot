@@ -61,7 +61,7 @@ Run: `--repeat 3`, 5 validated cases, 97.3% fields correct, 66.7% perfect runs.
 | `sbct-undocumented-codes-refusal` fails | **Right — 3/3 failed** |
 
 **On the miss.** The variable-wind bug did not reproduce, but the cause was found
-anyway and it was not what either hypothesis in `README.md` framed as most likely.
+anyway and it was not what either hypothesis in the evaluation notes framed as most likely.
 Retrieval was returning the document title, the structure section, station/time and
 pressure — the wind, visibility and cloud sections never arrived. With `n_results=4`
 the decoder marked nearly every group undecodable, which was correct behaviour on

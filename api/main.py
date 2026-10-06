@@ -10,14 +10,9 @@ api/routers/, grouped by domain.
 Run:  uvicorn api.main:app --reload --port 8000
 """
 
-# Corporate proxy inspects SSL: this must run before anything opens a connection.
-import truststore
-truststore.inject_into_ssl()
-
 import sys
 from pathlib import Path
 
-# Must happen before the routers are imported, since they import from src/.
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
@@ -36,8 +31,6 @@ app = FastAPI(
     version="1.1.0",
 )
 
-# The React frontend calls this from the browser. Wide open is fine for local
-# development; before deploying, replace with the real origin.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

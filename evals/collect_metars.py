@@ -15,7 +15,6 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# weather.py lives in src/, which is not on the path when running from evals/
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
@@ -23,26 +22,24 @@ from weather import get_metar  # noqa: E402
 
 DATASET_PATH = ROOT / "evals" / "golden_dataset.json"
 
-# Spread across regions and climates so the sample is not all one weather pattern.
 AIRPORTS = [
-    "SBGR",  # Guarulhos       - busiest, SE Brazil
-    "SBGL",  # Galeao          - coastal, Rio
-    "SBPA",  # Porto Alegre    - south, cold fronts
-    "SBBR",  # Brasilia        - central plateau, dry season
-    "SBCF",  # Confins         - high elevation, fog-prone
-    "SBSP",  # Congonhas       - urban, short runway
-    "SBCT",  # Curitiba        - south, fog and low ceiling
-    "SBRF",  # Recife          - northeast, tropical
-    "SBSV",  # Salvador        - northeast, coastal
-    "SBFL",  # Florianopolis   - island, marine layer
-    "SBBE",  # Belem           - equatorial, heavy rain
-    "SBMN",  # Manaus          - amazon, thunderstorms
-    "SBKP",  # Viracopos       - cargo hub
-    "SBGO",  # Goiania         - central
-    "SBFZ",  # Fortaleza       - northeast coast
+    "SBGR",
+    "SBGL",
+    "SBPA",
+    "SBBR",
+    "SBCF",
+    "SBSP",
+    "SBCT",
+    "SBRF",
+    "SBSV",
+    "SBFL",
+    "SBBE",
+    "SBMN",
+    "SBKP",
+    "SBGO",
+    "SBFZ",
 ]
 
-# Every field the contract requires, all null. See evals/README.md.
 EMPTY_EXPECTED = {
     "station": None,
     "wind_direction_deg": None,
@@ -73,7 +70,7 @@ def main() -> int:
         if not metar:
             print(f"[skip] {icao}: no report returned")
             continue
-        metar = " ".join(metar.split())  # the API may wrap long reports
+        metar = " ".join(metar.split())
         if metar in existing_metars:
             print(f"[skip] {icao}: already in dataset")
             continue

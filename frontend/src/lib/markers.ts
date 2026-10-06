@@ -5,3 +5,32 @@ export function altitudeBand(altitudeM: number | null): "low" | "mid" | "high" {
   if (altitudeM < 9000) return "mid";
   return "high";
 }
+
+export function sampleSpread<T extends { latitude: number; longitude: number }>(
+  items: T[],
+  max: number,
+  cellDeg = 5,
+): T[] {
+  if (items.length <= max) return items;
+  const cells = new Map<string, T[]>();
+  for (const item of items) {
+    const key = `${Math.floor(item.latitude / cellDeg)}:${Math.floor(item.longitude / cellDeg)}`;
+    const cell = cells.get(key);
+    if (cell) cell.push(item);
+    else cells.set(key, [item]);
+  }
+  const buckets = [...cells.values()];
+  const sample: T[] = [];
+  for (let round = 0; sample.length < max; round++) {
+    let took = false;
+    for (const bucket of buckets) {
+      if (round < bucket.length) {
+        sample.push(bucket[round]!);
+        took = true;
+        if (sample.length === max) break;
+      }
+    }
+    if (!took) break;
+  }
+  return sample;
+}

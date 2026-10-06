@@ -5,6 +5,7 @@ import { formatAltitude, formatHeading, formatSpeed } from "@/lib/units";
 import { EmptyState } from "@/components/StatePanels";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n-context";
+import { MAX_LIST_ROWS } from "@/config";
 
 export function TrafficList({
   aircraft,
@@ -21,9 +22,11 @@ export function TrafficList({
     return <EmptyState label={t("state.noAircraft")} hint={t("state.tryAnotherRegion")} />;
   }
 
+  const rows = aircraft.length > MAX_LIST_ROWS ? aircraft.slice(0, MAX_LIST_ROWS) : aircraft;
+
   return (
     <ul className="divide-y divide-border">
-      {aircraft.map((a, i) => (
+      {rows.map((a, i) => (
         <motion.li
           key={a.icao24}
           initial={{ opacity: 0 }}
@@ -62,6 +65,13 @@ export function TrafficList({
           </button>
         </motion.li>
       ))}
+      {rows.length < aircraft.length ? (
+        <li className="px-4 py-3 text-center text-[11px] text-muted-foreground">
+          {t("traffic.truncated")
+            .replace("{shown}", String(rows.length))
+            .replace("{total}", String(aircraft.length))}
+        </li>
+      ) : null}
     </ul>
   );
 }

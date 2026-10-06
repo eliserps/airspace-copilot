@@ -12,12 +12,6 @@ export type Aircraft = {
   heading_deg: number | null;
 };
 
-export type AircraftSummaryResponse = {
-  region: string;
-  summary: string;
-  source: string;
-};
-
 export type Bounds = {
   lat_min: number;
   lat_max: number;
@@ -53,12 +47,6 @@ export type AskResponse = {
   question: string;
   answer: string;
   flagged: boolean;
-};
-
-export type HealthResponse = {
-  status: string;
-  regions: string[];
-  languages: string[];
 };
 
 type ApiErrorBody = {
@@ -120,11 +108,6 @@ export function toApiLang(lang: string): Lang {
 }
 
 export const api = {
-  health: () => request<HealthResponse>(`/health`),
-
-  aircraft: (region: string) =>
-    request<AircraftSummaryResponse>(`/aircraft?region=${encodeURIComponent(region)}`),
-
   aircraftMap: (region: string) =>
     request<AircraftMapResponse>(`/aircraft/map?region=${encodeURIComponent(region)}`),
 

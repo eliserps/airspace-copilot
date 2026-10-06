@@ -7,10 +7,10 @@ existing src/ functions already return -- they do not reshape anything.
 
 from pydantic import BaseModel, Field
 
-LANGUAGES = ("en", "pt")
+from config import LANGUAGE_NAMES
 
+LANGUAGES = tuple(LANGUAGE_NAMES)
 
-# --- requests ---
 
 class AskRequest(BaseModel):
     question: str = Field(
@@ -20,8 +20,6 @@ class AskRequest(BaseModel):
         examples=["Is the weather good for landing at Guarulhos?"],
     )
 
-
-# --- responses ---
 
 class HealthResponse(BaseModel):
     status: str
@@ -95,9 +93,3 @@ class AskResponse(BaseModel):
                     "fenced as untrusted data.",
     )
 
-
-class ErrorResponse(BaseModel):
-    """The shape of every error the API returns."""
-
-    error: str = Field(description="Stable machine-readable slug. Branch on this.")
-    message: str = Field(description="Human-readable explanation.")

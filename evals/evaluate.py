@@ -14,9 +14,6 @@ Usage:
                                       # weak evidence)
 """
 
-import truststore
-truststore.inject_into_ssl()
-
 import argparse
 import json
 import sys
@@ -33,8 +30,6 @@ from decoder import decode_metar_structured  # noqa: E402
 DATASET_PATH = ROOT / "evals" / "golden_dataset.json"
 RESULTS_PATH = ROOT / "evals" / "results.json"
 
-# Compared by exact equality. Order matters for lists, which is correct here:
-# cloud layers are reported bottom-up and the sequence is part of the meaning.
 SCORED_FIELDS = [
     "station",
     "wind_direction_deg",
@@ -74,7 +69,7 @@ def normalise(field: str, value):
         layers = []
         for layer in value:
             if not isinstance(layer, dict):
-                return value  # malformed: let it fail loudly
+                return value
             height = layer.get("height_ft")
             if isinstance(height, float) and height.is_integer():
                 height = int(height)
@@ -98,8 +93,6 @@ def check_refusal(expected: dict, actual: dict) -> tuple[bool, str]:
     listed = {str(c).strip().upper() for c in (actual.get("undecodable_codes") or [])}
 
     if not should_refuse:
-        # Over-refusal is also a failure: refusing documented codes makes the
-        # decoder useless, which is how the n_results=4 retrieval bug showed up.
         if listed:
             return False, f"refused codes that are documented: {sorted(listed)}"
         return True, "no refusal expected, none given"
@@ -125,8 +118,6 @@ def evaluate_case(case: dict) -> dict:
     }
 
     if result["error"]:
-        # The decoder produced nothing comparable. Every field fails; that is the
-        # honest score, not a crash and not a skip.
         for field in SCORED_FIELDS:
             result["fields"][field] = {
                 "pass": False, "expected": expected.get(field), "actual": None,

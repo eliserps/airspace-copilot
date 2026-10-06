@@ -12,7 +12,7 @@ export function BriefingPanel({ region, regionLabel }: { region: string; regionL
   const q = useQuery({
     queryKey: ["briefing", region, locale],
     queryFn: () => api.briefing(region, locale),
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
   });
 
   const updatedAt = q.dataUpdatedAt

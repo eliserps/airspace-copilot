@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "description": "Hand-validated METAR decodings. Ground truth comes from the ICAO/FAA METAR specification, NOT from any language model. See evals/README.md for the field contract.",
+  "description": "Hand-validated METAR decodings. Ground truth comes from the ICAO/FAA METAR specification, NOT from any language model. See STRUCTURED_SCHEMA in src/decoder.py for the field contract.",
   "cases": [
     {
       "id": "sbgr-cavok-baseline",

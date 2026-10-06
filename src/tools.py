@@ -8,6 +8,7 @@ REGIONS = {
    "africa": (-35.0, 37.0, -18.0, 52.0),
    "asia": (5.0, 55.0, 60.0, 145.0),
    "oceania": (-47.0, -8.0, 110.0, 180.0),
+   "world": (-90.0, 90.0, -180.0, 180.0),
 }
 
 _token_cache = {"value": None, "expires_at": 0}
@@ -22,9 +23,21 @@ def _cached_token() -> str:
        _token_cache["expires_at"] = now + TOKEN_TTL_SECONDS
    return _token_cache["value"]
 
-def is_known_region(region: str) -> bool:
-   """True when the region has a bounding box defined."""
-   return region.lower().strip() in REGIONS
+AIRCRAFT_TTL_SECONDS = 30
+_aircraft_cache: dict[str, tuple[float, list]] = {}
+
+
+def _fetch_region(key: str) -> list:
+   """Fetches state vectors for a known region key, reusing a recent result."""
+   now = time.time()
+   cached = _aircraft_cache.get(key)
+
+   if cached and now - cached[0] < AIRCRAFT_TTL_SECONDS:
+       return cached[1]
+   lamin, lamax, lomin, lomax = REGIONS[key]
+   aircraft = get_aircraft(_cached_token(), lamin, lamax, lomin, lomax)
+   _aircraft_cache[key] = (now, aircraft)
+   return aircraft
 
 
 def get_aircraft_for_region(region: str) -> list:
@@ -37,13 +50,8 @@ def get_aircraft_for_region(region: str) -> list:
 
    if key not in REGIONS:
        raise KeyError(region)
-   lamin, lamax, lomin, lomax = REGIONS[key]
-   return get_aircraft(_cached_token(), lamin, lamax, lomin, lomax)
+   return _fetch_region(key)
 
-
-# OpenSky state vectors are positional arrays, not objects. Naming the indices
-# here keeps that knowledge in one place -- and index 5 is LONGITUDE while index 6
-# is LATITUDE, the reverse of the (lat, lon) order most map libraries expect.
 ICAO24 = 0
 CALLSIGN = 1
 ORIGIN_COUNTRY = 2
@@ -75,8 +83,6 @@ def list_aircraft(region: str) -> list[dict]:
        if latitude is None or longitude is None:
            continue
 
-       # Barometric altitude is the usual reading; geometric is the fallback when
-       # the transponder does not report it. Both are metres.
        altitude = plane[BARO_ALTITUDE]
        if altitude is None:
            altitude = plane[GEO_ALTITUDE]
@@ -98,12 +104,10 @@ def list_aircraft(region: str) -> list[dict]:
 
 def count_aircraft(region: str) -> str:
    """Returns a summary of aircraft currently detected over a known region."""
-   key = region.lower().strip()
-
-   if key not in REGIONS:
+   try:
+       aircraft = get_aircraft_for_region(region)
+   except KeyError:
        return f"Unknown region '{region}'. Available: {', '.join(REGIONS)}"
-   lamin, lamax, lomin, lomax = REGIONS[key]
-   aircraft = get_aircraft(_cached_token(), lamin, lamax, lomin, lomax)
 
    if not aircraft:
        return f"No aircraft detected over {region} right now."

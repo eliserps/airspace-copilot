@@ -3,10 +3,20 @@ from config import GROQ_API_KEY, LLM_MODEL
 
 client = Groq(api_key=GROQ_API_KEY)
 
+
+def log_usage(label: str, usage) -> None:
+   """Prints how many tokens a call spent, so the cost of each feature is visible."""
+   if usage is None:
+       return
+   print(f"[llm] {label}: prompt={usage.prompt_tokens} "
+         f"completion={usage.completion_tokens} total={usage.total_tokens}")
+
+
 def ask(
    prompt: str,
    system_prompt: str | None = None,
    json_mode: bool = False,
+   label: str = "ask",
 ) -> str:
    """Sends a prompt to the model and returns the text answer.
 
@@ -24,4 +34,5 @@ def ask(
        temperature=0.2,
        **extra,
    )
+   log_usage(label, response.usage)
    return response.choices[0].message.content
