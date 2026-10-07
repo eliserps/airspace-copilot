@@ -4,7 +4,8 @@ A THIN wrapper over src/. Every endpoint calls an existing function and shapes t
 result as JSON. No decoding, no agent logic, no bounding boxes, no guardrail rules
 live here -- if a rule about aviation or the LLM is needed, it belongs in src/.
 
-This file does app creation, CORS and router registration ONLY. Endpoints live in
+This file does app creation, CORS and router registration ONLY. Allowed origins
+come from CORS_ORIGINS in .env (see src/config.py). Endpoints live in
 api/routers/, grouped by domain.
 
 Run:  uvicorn api.main:app --reload --port 8000
@@ -19,6 +20,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
+from config import CORS_ORIGINS  # noqa: E402
 from tools import REGIONS  # noqa: E402
 
 from .errors import register_error_handlers  # noqa: E402
@@ -33,7 +35,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],

@@ -7,19 +7,20 @@ result into HTTP: rejection into 422, and a flagged-but-allowed question into th
 
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from agent import run_agent
 from guardrails import GuardrailRejection, check_question
 
 from ..errors import error_detail
+from ..ratelimit import ask_limiter
 from ..schemas import AskRequest, AskResponse
 
 router = APIRouter(tags=["agent"])
 log = logging.getLogger("airspace.guardrails")
 
 
-@router.post("/ask", response_model=AskResponse)
+@router.post("/ask", response_model=AskResponse, dependencies=[Depends(ask_limiter)])
 def ask(payload: AskRequest):
     """Answers a free-form question using the tool-calling agent."""
     try:

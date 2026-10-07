@@ -1,4 +1,5 @@
 import math
+import threading
 import time
 from collections import Counter
 
@@ -102,6 +103,7 @@ def format_summary(stats: dict) -> str:
 
 BRIEFING_TTL_SECONDS = 180
 _briefings: dict[tuple[str, str], dict] = {}
+_briefing_locks: dict[tuple[str, str], threading.Lock] = {}
 
 
 def _bucket(n: int) -> int:
@@ -124,6 +126,12 @@ def generate_briefing(aircraft: list, region: str, language: str = "en") -> str:
    """Generates a natural-language briefing of the current airspace."""
    stats = summarize_aircraft(aircraft)
    key = (region.lower().strip(), language)
+   with _briefing_locks.setdefault(key, threading.Lock()):
+       return _generate_briefing_locked(stats, key, region, language)
+
+
+def _generate_briefing_locked(stats: dict, key: tuple[str, str], region: str, language: str) -> str:
+   """Body of generate_briefing(); must run while holding the lock for `key`."""
    now = time.time()
    cached = _briefings.get(key)
 
