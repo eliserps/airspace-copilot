@@ -9,6 +9,7 @@ api/
   main.py            app creation, CORS, router registration only
   errors.py          the shared flat error shape + exception handlers
   schemas.py         Pydantic request/response models
+  ratelimit.py       per-client limits on the token-spending endpoints
   routers/
     briefing.py      GET  /briefing
     weather.py       GET  /weather/{icao}
@@ -48,8 +49,13 @@ From the project root, with the venv active and the root setup done:
 | 200 | OK |
 | 404 | Not found — unknown region, or no METAR for that airport |
 | 422 | Invalid request — bad `lang`, malformed ICAO, empty question |
+| 429 | `too_many_requests` — this client hit the per-minute limit on `/ask` or `/weather` (see `Retry-After`) · `rate_limited` — OpenSky quota exhausted · `llm_rate_limited` — the model provider's quota exhausted |
 | 502 | The agent produced no answer |
-| 503 | An upstream data source (OpenSky) is unavailable |
+| 503 | `upstream_unavailable` — OpenSky or AWC unreachable · `llm_unavailable` — the model provider failed (timeout, outage, bad key) |
+
+**Rate limits.** `/ask` and `/weather/{icao}` are the endpoints where a caller decides how many model calls happen, so they are limited per client IP (defaults 10 and 20 per minute, `ASK_RATE_LIMIT_PER_MINUTE` / `WEATHER_RATE_LIMIT_PER_MINUTE`; `0` disables). Counters live in memory, like the caches. Behind a reverse proxy run uvicorn with `--proxy-headers --forwarded-allow-ips="*"`, or every user shares the proxy's bucket.
+
+**CORS.** Only origins listed in `CORS_ORIGINS` (comma-separated) may call the API from a browser. The default is the local dev server, `http://localhost:8080`; a deployed frontend's URL must be added.
 
 **Cost and latency per endpoint.** Three endpoints call the model; the cache rules behind them are explained under *Token budget* in the [root README](../README.md#token-budget).
 

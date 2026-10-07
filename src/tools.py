@@ -1,4 +1,7 @@
+import threading
 import time
+
+import requests
 from opensky import get_token, get_aircraft
 
 REGIONS = {
@@ -12,32 +15,58 @@ REGIONS = {
 }
 
 _token_cache = {"value": None, "expires_at": 0}
+_token_lock = threading.Lock()
 TOKEN_TTL_SECONDS = 1500
 
 def _cached_token() -> str:
    """Returns a valid token, reusing it until it is close to expiring."""
-   now = time.time()
+   with _token_lock:
+       now = time.time()
+       if _token_cache["value"] is None or now >= _token_cache["expires_at"]:
+           _token_cache["value"] = get_token()
+           _token_cache["expires_at"] = now + TOKEN_TTL_SECONDS
+       return _token_cache["value"]
 
-   if _token_cache["value"] is None or now >= _token_cache["expires_at"]:
-       _token_cache["value"] = get_token()
-       _token_cache["expires_at"] = now + TOKEN_TTL_SECONDS
-   return _token_cache["value"]
+
+def _invalidate_token(rejected: str) -> None:
+   """Drops the cached token, unless another thread already replaced it."""
+   with _token_lock:
+       if _token_cache["value"] == rejected:
+           _token_cache["value"] = None
+
+
+def _get_aircraft_authenticated(lamin, lamax, lomin, lomax) -> list:
+   """Fetches state vectors, refreshing the token once if OpenSky rejects it.
+
+   The TTL is only an estimate of the token's life; a token revoked or expired
+   early would otherwise fail every request until the TTL ran out.
+   """
+   token = _cached_token()
+   try:
+       return get_aircraft(token, lamin, lamax, lomin, lomax)
+   except requests.HTTPError as error:
+       if error.response is None or error.response.status_code != 401:
+           raise
+       _invalidate_token(token)
+       return get_aircraft(_cached_token(), lamin, lamax, lomin, lomax)
 
 AIRCRAFT_TTL_SECONDS = 30
 _aircraft_cache: dict[str, tuple[float, list]] = {}
+_region_locks = {key: threading.Lock() for key in REGIONS}
 
 
 def _fetch_region(key: str) -> list:
    """Fetches state vectors for a known region key, reusing a recent result."""
-   now = time.time()
-   cached = _aircraft_cache.get(key)
+   with _region_locks[key]:
+       now = time.time()
+       cached = _aircraft_cache.get(key)
 
-   if cached and now - cached[0] < AIRCRAFT_TTL_SECONDS:
-       return cached[1]
-   lamin, lamax, lomin, lomax = REGIONS[key]
-   aircraft = get_aircraft(_cached_token(), lamin, lamax, lomin, lomax)
-   _aircraft_cache[key] = (now, aircraft)
-   return aircraft
+       if cached and now - cached[0] < AIRCRAFT_TTL_SECONDS:
+           return cached[1]
+       lamin, lamax, lomin, lomax = REGIONS[key]
+       aircraft = _get_aircraft_authenticated(lamin, lamax, lomin, lomax)
+       _aircraft_cache[key] = (time.time(), aircraft)
+       return aircraft
 
 
 def get_aircraft_for_region(region: str) -> list:

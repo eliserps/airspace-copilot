@@ -173,6 +173,11 @@ Python · FastAPI · Chroma (vector database) · Groq (default model `openai/gpt
     OPENSKY_CLIENT_SECRET=your_opensky_client_secret
     # optional — defaults to openai/gpt-oss-120b
     LLM_MODEL=openai/gpt-oss-120b
+    # optional — browser origins allowed to call the API (default: the local dev server)
+    CORS_ORIGINS=http://localhost:8080
+    # optional — per-IP requests per minute on the token-spending endpoints
+    ASK_RATE_LIMIT_PER_MINUTE=10
+    WEATHER_RATE_LIMIT_PER_MINUTE=20
 
 Get a Groq key at https://console.groq.com and OpenSky credentials at https://opensky-network.org (Account → API Client). The file is read once at startup, so restart the backend after changing a key.
 

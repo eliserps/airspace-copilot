@@ -10,6 +10,9 @@ two different shapes depending on whether the error came from us or from
 validation. These handlers flatten that to one.
 """
 
+import logging
+
+import groq
 import requests
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
@@ -17,6 +20,8 @@ from fastapi.responses import JSONResponse
 
 SOURCE_OPENSKY = "OpenSky (partial volunteer coverage)"
 SOURCE_AWC = "Aviation Weather Center"
+
+log = logging.getLogger("airspace.errors")
 
 
 def error_detail(error: str, message: str, **context) -> dict:
@@ -56,10 +61,12 @@ def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(HTTPException)
     async def http_error_handler(request, exc: HTTPException):
         if isinstance(exc.detail, dict):
-            return JSONResponse(status_code=exc.status_code, content=exc.detail)
+            return JSONResponse(status_code=exc.status_code, content=exc.detail,
+                                headers=exc.headers)
         return JSONResponse(
             status_code=exc.status_code,
             content={"error": "http_error", "message": str(exc.detail)},
+            headers=exc.headers,
         )
 
     @app.exception_handler(RequestValidationError)
@@ -103,5 +110,35 @@ def register_error_handlers(app: FastAPI) -> None:
             status_code=503,
             content={"error": "upstream_unavailable",
                      "message": "A data source is unavailable right now. "
+                                "Try again shortly."},
+        )
+
+    @app.exception_handler(groq.RateLimitError)
+    async def llm_rate_limited_handler(request, exc: groq.RateLimitError):
+        """The language model's token/request quota ran out -- 429, not 500.
+
+        The Groq SDK uses httpx, so these never reach the requests handlers
+        above; without their own handlers they surface as opaque 500s.
+        """
+        log.warning("LLM rate limited: %s", exc)
+        return JSONResponse(
+            status_code=429,
+            content={"error": "llm_rate_limited",
+                     "message": "The AI model's usage limit has been reached. "
+                                "Try again in a minute."},
+        )
+
+    @app.exception_handler(groq.APIError)
+    async def llm_error_handler(request, exc: groq.APIError):
+        """Any other model failure (timeout, outage, bad key) becomes 503.
+
+        Logged at error level: an AuthenticationError here means GROQ_API_KEY
+        is wrong, which only the operator can fix.
+        """
+        log.error("LLM call failed: %s: %s", type(exc).__name__, exc)
+        return JSONResponse(
+            status_code=503,
+            content={"error": "llm_unavailable",
+                     "message": "The AI model is unavailable right now. "
                                 "Try again shortly."},
         )

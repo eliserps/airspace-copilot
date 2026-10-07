@@ -64,6 +64,34 @@ AVAILABLE_FUNCTIONS = {
 
 MAX_ITERATIONS = 5
 
+
+def _execute_tool(function_name: str, raw_arguments: str) -> str:
+   """Runs one requested tool call and returns its result as text.
+
+   The model's request is untrusted output: it can name a tool that does not
+   exist or send arguments that are not valid JSON. Those become an error
+   message fed back to the model -- which can correct itself -- instead of an
+   exception that would turn the whole request into a 500.
+   """
+   function = AVAILABLE_FUNCTIONS.get(function_name)
+   if function is None:
+       return (f"Error: unknown tool '{function_name}'. "
+               f"Available tools: {', '.join(AVAILABLE_FUNCTIONS)}.")
+   try:
+       arguments = json.loads(raw_arguments or "{}")
+   except json.JSONDecodeError:
+       return "Error: tool arguments were not valid JSON."
+   if not isinstance(arguments, dict):
+       return "Error: tool arguments must be a JSON object."
+   try:
+       result = function(**arguments)
+   except TypeError as error:
+       return f"Error: invalid arguments for {function_name}: {error}"
+
+   if result is None or (isinstance(result, str) and not result.strip()):
+       return "No data available for this request."
+   return str(result)
+
 def run_agent(question: str) -> str:
    """Answers a question, looping through tool calls until it has an answer."""
    messages = [
@@ -100,7 +128,6 @@ def run_agent(question: str) -> str:
        for tool_call in response.tool_calls:
            function_name = tool_call.function.name
            raw_arguments = tool_call.function.arguments
-           arguments = json.loads(raw_arguments)
            signature = (function_name, raw_arguments)
 
            if signature in already_called:
@@ -108,19 +135,14 @@ def run_agent(question: str) -> str:
                result = already_called[signature]
                repeated = True
            else:
-               print(f"[agent] step {step + 1} — {function_name}({arguments})")
-               function = AVAILABLE_FUNCTIONS[function_name]
-               result = function(**arguments)
-
-               if result is None or (isinstance(result, str) and not result.strip()):
-                   result = "No data available for this request."
-
+               print(f"[agent] step {step + 1} — {function_name}({raw_arguments})")
+               result = _execute_tool(function_name, raw_arguments)
                already_called[signature] = result
 
            messages.append({
                "role": "tool",
                "tool_call_id": tool_call.id,
-               "content": str(result),
+               "content": result,
            })
 
        if repeated:

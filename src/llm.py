@@ -1,7 +1,9 @@
 from groq import Groq
 from config import GROQ_API_KEY, LLM_MODEL
 
-client = Groq(api_key=GROQ_API_KEY)
+LLM_TIMEOUT_SECONDS = 30
+
+client = Groq(api_key=GROQ_API_KEY, timeout=LLM_TIMEOUT_SECONDS, max_retries=2)
 
 
 def log_usage(label: str, usage) -> None:
