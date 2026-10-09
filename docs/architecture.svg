@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 150" width="980" height="150" font-family="Segoe UI, -apple-system, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8b95a5"/>
+    </marker>
+  </defs>
+
+  <g text-anchor="middle" fill="#ffffff">
+    <rect x="10" y="30" width="200" height="96" rx="14" fill="#7c5cff"/>
+    <text x="110" y="64" font-size="18" font-weight="700">React UI</text>
+    <text x="110" y="88" font-size="14" font-family="Consolas, Menlo, monospace">frontend/</text>
+    <text x="110" y="110" font-size="13" font-style="italic" opacity="0.9">rendering only</text>
+
+    <rect x="270" y="30" width="200" height="96" rx="14" fill="#0f9d8a"/>
+    <text x="370" y="64" font-size="18" font-weight="700">FastAPI</text>
+    <text x="370" y="88" font-size="14" font-family="Consolas, Menlo, monospace">api/</text>
+    <text x="370" y="110" font-size="13" font-style="italic" opacity="0.9">no business logic</text>
+
+    <rect x="530" y="30" width="200" height="96" rx="14" fill="#e8762b"/>
+    <text x="630" y="64" font-size="18" font-weight="700">Core modules</text>
+    <text x="630" y="88" font-size="14" font-family="Consolas, Menlo, monospace">src/</text>
+    <text x="630" y="110" font-size="13" font-style="italic" opacity="0.9">all the logic</text>
+
+    <rect x="790" y="30" width="180" height="96" rx="14" fill="#475569"/>
+    <text x="880" y="64" font-size="18" font-weight="700">External</text>
+    <text x="880" y="92" font-size="14">OpenSky · AWC</text>
+    <text x="880" y="112" font-size="14">Groq</text>
+  </g>
+
+  <g stroke="#8b95a5" stroke-width="2.5" marker-end="url(#arrow)">
+    <line x1="214" y1="78" x2="264" y2="78"/>
+    <line x1="474" y1="78" x2="524" y2="78"/>
+    <line x1="734" y1="78" x2="784" y2="78"/>
+  </g>
+
+  <g text-anchor="middle" fill="#8b95a5" font-size="13" font-weight="600">
+    <text x="240" y="66">HTTP</text>
+    <text x="500" y="66">calls</text>
+  </g>
+</svg>

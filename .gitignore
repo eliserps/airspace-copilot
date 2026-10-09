@@ -5,3 +5,4 @@ __pycache__/
 chroma_db/
 node_modules/
 .npmrc
+.pytest_cache/

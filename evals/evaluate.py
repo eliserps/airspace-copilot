@@ -22,10 +22,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(ROOT))
 
-from config import LLM_MODEL  # noqa: E402
-from decoder import decode_metar_structured  # noqa: E402
+from src.config import LLM_MODEL  # noqa: E402
+from src.decoder import decode_metar_structured  # noqa: E402
 
 DATASET_PATH = ROOT / "evals" / "golden_dataset.json"
 RESULTS_PATH = ROOT / "evals" / "results.json"

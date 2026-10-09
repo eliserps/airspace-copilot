@@ -1,5 +1,5 @@
-from config import LLM_MODEL
-from llm import client, log_usage
+from .config import LLM_MODEL
+from .llm import get_client, log_usage
 
 def chat_with_tools(messages: list, tools: list | None = None):
    """Sends the conversation to the model, optionally offering tools.
@@ -16,7 +16,7 @@ def chat_with_tools(messages: list, tools: list | None = None):
    if tools:
        kwargs["tools"] = tools
        kwargs["tool_choice"] = "auto"
-   response = client.chat.completions.create(**kwargs)
+   response = get_client().chat.completions.create(**kwargs)
    log_usage("agent", response.usage)
 
    return response.choices[0].message

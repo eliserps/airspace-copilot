@@ -34,6 +34,8 @@ export const STRINGS = {
     "state.noBriefing": "No briefing for this region",
     "state.tryAnotherRegion": "Try another region.",
     "state.stale": "Stale",
+    "state.staleHint":
+      "The live feed is temporarily unavailable; showing the last positions received.",
 
     "copilot.standingBy": "Copilot standing by",
     "copilot.ask": "Ask about traffic, weather, or procedures in",
@@ -62,6 +64,7 @@ export const STRINGS = {
     "weather.icaoLabel": "Airport ICAO code",
     "weather.enterIcao": "Enter an ICAO code",
     "weather.example": "For example SBGR or SBGL.",
+    "weather.invalidIcao": "ICAO codes have 4 letters or digits (SBGR, not GRU).",
     "weather.raw": "Raw METAR",
     "weather.decoded": "Decoded",
     "weather.noReport": "No report for",
@@ -115,6 +118,8 @@ export const STRINGS = {
     "state.noBriefing": "Sem briefing para esta região",
     "state.tryAnotherRegion": "Tente outra região.",
     "state.stale": "Desatualizado",
+    "state.staleHint":
+      "O feed ao vivo está indisponível no momento; exibindo as últimas posições recebidas.",
 
     "copilot.standingBy": "Copiloto a postos",
     "copilot.ask": "Pergunte sobre tráfego, meteorologia ou procedimentos em",
@@ -143,6 +148,7 @@ export const STRINGS = {
     "weather.icaoLabel": "Código ICAO do aeroporto",
     "weather.enterIcao": "Digite um código ICAO",
     "weather.example": "Por exemplo SBGR ou SBGL.",
+    "weather.invalidIcao": "Códigos ICAO têm 4 letras ou dígitos (SBGR, não GRU).",
     "weather.raw": "METAR bruto",
     "weather.decoded": "Decodificado",
     "weather.noReport": "Sem boletim para",

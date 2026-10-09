@@ -24,6 +24,8 @@ export type AircraftMapResponse = {
   count: number;
   bounds: Bounds;
   aircraft: Aircraft[];
+  fetched_at: number;
+  stale: boolean;
   source: string;
 };
 
@@ -32,6 +34,7 @@ export type BriefingResponse = {
   language: string;
   aircraft_count: number;
   briefing: string;
+  generated_at: number;
   source: string;
 };
 
@@ -119,10 +122,10 @@ export const api = {
   weather: (icao: string, lang: string = "en") =>
     request<WeatherResponse>(`/weather/${encodeURIComponent(icao)}?lang=${toApiLang(lang)}`),
 
-  ask: (question: string) =>
+  ask: (question: string, region?: string) =>
     request<AskResponse>(`/ask`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question, region }),
     }),
 };

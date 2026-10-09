@@ -1,9 +1,9 @@
-"""METAR endpoint. Calls get_metar() and decode_metar() from src/."""
+"""METAR endpoint. Calls fetch_metar() and decode_metar() from src/."""
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
-from decoder import decode_metar
-from weather import get_metar
+from src.decoder import decode_metar
+from src.weather import fetch_metar
 
 from ..errors import SOURCE_AWC, error_detail, invalid_language
 from ..ratelimit import weather_limiter
@@ -18,8 +18,8 @@ router = APIRouter(tags=["weather"])
     dependencies=[Depends(weather_limiter)],
 )
 def weather(
-    icao: str = Path(min_length=4, max_length=4,
-                     description="4-letter ICAO code, e.g. SBGR."),
+    icao: str = Path(pattern=r"^[A-Za-z0-9]{4}$",
+                     description="4-character ICAO code, e.g. SBGR."),
     lang: str = Query("en", description="'en' or 'pt'."),
 ):
     """Raw METAR plus a plain-language decoding for one airport."""
@@ -27,7 +27,7 @@ def weather(
         raise invalid_language(LANGUAGES)
 
     code = icao.upper()
-    metar = get_metar(code)
+    metar = fetch_metar(code)
 
     if not metar:
         raise HTTPException(

@@ -17,6 +17,9 @@ import requests
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from src.llm import LLMNotConfigured
 
 SOURCE_OPENSKY = "OpenSky (partial volunteer coverage)"
 SOURCE_AWC = "Aviation Weather Center"
@@ -58,21 +61,35 @@ def invalid_language(allowed: tuple[str, ...]) -> HTTPException:
 def register_error_handlers(app: FastAPI) -> None:
     """Attaches the handlers that flatten every error to the shared shape."""
 
-    @app.exception_handler(HTTPException)
-    async def http_error_handler(request, exc: HTTPException):
+    @app.exception_handler(StarletteHTTPException)
+    async def http_error_handler(request, exc: StarletteHTTPException):
         if isinstance(exc.detail, dict):
             return JSONResponse(status_code=exc.status_code, content=exc.detail,
                                 headers=exc.headers)
+        slugs = {404: "not_found", 405: "method_not_allowed"}
         return JSONResponse(
             status_code=exc.status_code,
-            content={"error": "http_error", "message": str(exc.detail)},
+            content={"error": slugs.get(exc.status_code, "http_error"),
+                     "message": str(exc.detail)},
             headers=exc.headers,
+        )
+
+    @app.exception_handler(LLMNotConfigured)
+    async def llm_not_configured_handler(request, exc: LLMNotConfigured):
+        log.error("LLM call skipped: %s", exc)
+        return JSONResponse(
+            status_code=503,
+            content={"error": "llm_unavailable",
+                     "message": "The AI model is not configured on this server."},
         )
 
     @app.exception_handler(RequestValidationError)
     async def validation_error_handler(request, exc: RequestValidationError):
         first = exc.errors()[0] if exc.errors() else {}
-        field = ".".join(str(p) for p in first.get("loc", []) if p != "body")
+        loc = list(first.get("loc", []))
+        if loc and loc[0] in ("body", "query", "path", "header", "cookie"):
+            loc = loc[1:]
+        field = ".".join(str(p) for p in loc)
         return JSONResponse(
             status_code=422,
             content={"error": "invalid_request",

@@ -1,7 +1,10 @@
 import json
-from llm_tools import chat_with_tools
-from weather import get_metar
-from tools import REGIONS, count_aircraft
+
+import requests
+
+from .llm_tools import chat_with_tools
+from .weather import fetch_metar
+from .tools import REGIONS, count_aircraft
 
 SYSTEM_PROMPT = """You are an airspace assistant.
 
@@ -13,6 +16,11 @@ STRICT RULES:
  reporting aircraft counts.
 - Answer in the same language the user asked in.
 """
+
+REGION_CONTEXT = (
+   "The user is looking at the map region '{region}'. When the question says "
+   "\"here\", \"this region\" or names no place, use that region."
+)
 
 TOOLS = [
    {
@@ -57,8 +65,18 @@ TOOLS = [
    },
 ]
 
+def metar_tool(icao_code: str) -> str:
+   try:
+       metar = fetch_metar(icao_code)
+   except ValueError as error:
+       return f"Error: {error}"
+   if not metar:
+       return f"No current METAR is published for {icao_code.strip().upper()}."
+   return metar
+
+
 AVAILABLE_FUNCTIONS = {
-   "get_metar": get_metar,
+   "get_metar": metar_tool,
    "count_aircraft": count_aircraft,
 }
 
@@ -87,15 +105,22 @@ def _execute_tool(function_name: str, raw_arguments: str) -> str:
        result = function(**arguments)
    except TypeError as error:
        return f"Error: invalid arguments for {function_name}: {error}"
+   except requests.RequestException as error:
+       print(f"[agent] {function_name} failed upstream: {error}")
+       return (f"Error: the data source for {function_name} is unavailable "
+               "right now. Tell the user this part could not be checked.")
 
    if result is None or (isinstance(result, str) and not result.strip()):
        return "No data available for this request."
    return str(result)
 
-def run_agent(question: str) -> str:
+def run_agent(question: str, region: str | None = None) -> str:
    """Answers a question, looping through tool calls until it has an answer."""
+   system_prompt = SYSTEM_PROMPT
+   if region in REGIONS:
+       system_prompt += "\n" + REGION_CONTEXT.format(region=region)
    messages = [
-       {"role": "system", "content": SYSTEM_PROMPT},
+       {"role": "system", "content": system_prompt},
        {"role": "user", "content": question},
    ]
 

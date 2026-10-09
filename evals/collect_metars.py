@@ -7,18 +7,16 @@ system it grades inherits that system's errors and then certifies them as correc
 Usage:  python evals/collect_metars.py
 """
 
-import truststore
-truststore.inject_into_ssl()
-
 import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(ROOT))
 
-from weather import get_metar  # noqa: E402
+from src import config  # noqa: E402,F401
+from src.weather import get_metar  # noqa: E402
 
 DATASET_PATH = ROOT / "evals" / "golden_dataset.json"
 

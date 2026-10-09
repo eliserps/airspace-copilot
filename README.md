@@ -1,198 +1,144 @@
-# airspace-copilot
+# ✈️ airspace-copilot
 
-An AI copilot for airspace monitoring. It reads live air traffic and aviation weather and explains what's happening in plain language, in English and Brazilian Portuguese.
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Groq](https://img.shields.io/badge/LLM-Groq-F55036)
 
-This is **not** a flight tracker. A map shows *where* planes are; this project uses AI to explain *what is happening and why*. The map is the frame — the AI is the product.
+An AI copilot that explains live air traffic and aviation weather in plain English or Portuguese.
 
-## Why
+![React UI calls FastAPI over HTTP, FastAPI calls the core modules, the core modules call OpenSky, AWC and Groq](docs/architecture.svg)
 
-Air traffic and aviation weather data are public, abundant and unreadable. A report like `SBPA 120300Z 23005KT 4000 BR OVC003 15/15 Q1013` only makes sense to trained pilots. This project turns that raw data into clear, grounded, bilingual explanations.
+## What it does
 
-## What it does today
+🌍 **Live traffic**: aircraft on a 3D globe, per continent or the whole world
 
-- **Live traffic** — real aircraft data from the OpenSky Network (OAuth2) for a continent or the whole world, on a 3D globe and as a list
-- **Airspace briefing** — a natural-language summary of the current airspace, in EN and PT-BR
-- **METAR decoding (RAG)** — raw aviation weather codes translated into plain language, grounded in reference documentation through retrieval, so the model explains from the source instead of guessing
-- **Conversational agent (tool calling)** — answers free-form questions such as "how many aircraft are over Europe right now?" or "is the weather good for landing in Guarulhos?" by deciding which tools to call, executing them and composing a grounded answer
-- **Automated evaluation** — a golden dataset of METARs with hand-verified decodings, scored field by field
+📝 **Briefing**: a short AI summary of the current airspace
 
-## Repository layout
+🌦️ **Weather decoding**: `SBGR 091800Z 19011G21KT 6000…` explained in plain words
 
-```
-React UI (frontend/)  ──HTTP──▶  FastAPI (api/)  ──calls──▶  core modules (src/)  ──▶  OpenSky · AWC · Groq
-  rendering only                  no business logic           all the logic
-```
+💬 **Copilot chat**: *"Is the weather good for landing in Guarulhos?"*
 
-| Folder | What it is | Details |
-| --- | --- | --- |
-| `src/` | Core Python modules — every rule about aviation and the LLM | this file |
-| `api/` | Thin FastAPI wrapper: endpoints, error contract, status codes | [api/README.md](api/README.md) |
-| `frontend/` | React web UI: globe, copilot chat, briefing, weather | [frontend/README.md](frontend/README.md) |
-| `evals/` | Golden dataset and deterministic evaluation of the decoder | [Evaluation](#evaluation) |
-| `knowledge/` | METAR reference documentation ingested by the RAG | — |
+📊 **Evaluation**: the weather decoder scored against hand-checked answers
 
-## Core modules (`src/`)
+## Quick start
 
-Each module has a single responsibility:
+**What you need**
 
-| Module | Responsibility |
-| --- | --- |
-| config.py | Loads secrets and configuration, including `LLM_MODEL` |
-| opensky.py | Client for the live air traffic API (OAuth2) |
-| weather.py | Client for the aviation weather API (METAR) |
-| llm.py | LLM provider adapter — swappable in one file; logs token usage per call |
-| llm_tools.py | LLM adapter for tool calling |
-| rag.py | Knowledge ingestion + semantic search (Chroma) |
-| briefing.py | Airspace briefing: aggregates traffic, then asks the model to narrate it |
-| decoder.py | RAG-grounded METAR decoding — prose for users, structured JSON for the eval |
-| tools.py | Region map, live traffic lookups and the tools exposed to the agent |
-| agent.py | Agent loop: decide, execute, respond |
-| guardrails.py | Input validation and prompt-injection defense |
-| main.py | Command-line demo of every feature |
+🐍 **Python 3.11+** and 🟩 **Node.js 20+**
 
-The LLM layer is deliberately isolated: the project was validated by switching providers without touching the rest of the code.
+🔑 **Groq API key** (runs the AI): [console.groq.com](https://console.groq.com)
 
-### Regions
+🛰️ **OpenSky client ID and secret** (flight data): [opensky-network.org](https://opensky-network.org) → Account → API Client
 
-Traffic is queried by region *name*; `REGIONS` in `tools.py` maps each name to a bounding box.
+**Steps**
 
-| Region | Notes |
-| --- | --- |
-| `south_america`, `north_america`, `europe`, `africa`, `asia`, `oceania` | Continental bounding boxes |
-| `world` | The whole globe — typically 10,000–13,000 detected aircraft, for the same OpenSky credits as a large continent |
+**① Create a Python environment**: `python -m venv .venv`
 
-### Agent design
+**② Activate it**: `.venv\Scripts\Activate.ps1` (macOS/Linux: `source .venv/bin/activate`)
 
-The agent runs a bounded loop — the model decides which tool to call, this code executes it, and the result is fed back until the model produces a final answer. The model never executes anything itself; it only requests.
+**③ Install packages**: `pip install -r requirements.txt`
 
-Three safeguards are built into the loop:
-- **Iteration limit** — the loop can never run indefinitely
-- **Call cache** — an identical tool call is never executed twice; the cached result is reused
-- **Loop breaker** — if the model requests data it already has, the final call is made with no tools available, forcing it to answer instead of looping
+**④ Add your keys**: create `.env` in the project root with `GROQ_API_KEY`, `OPENSKY_CLIENT_ID` and `OPENSKY_CLIENT_SECRET`
 
-Region lookups are deterministic: the model chooses a region name from the fixed list above, and this code maps it to coordinates. Anything that can be deterministic is kept out of the model's hands.
+**⑤ Point the UI to your API**: create `frontend/.env.local` containing `VITE_API_BASE_URL=http://localhost:8000`
 
-### Input guardrails
+**⑥ Terminal 1, start the API**: `uvicorn api.main:app --reload --port 8000`
 
-Free-form questions pass through `guardrails.py` before reaching the agent: structurally invalid input (empty, oversized, invisible-character-only) is rejected before a model call is spent on it, and known prompt-injection phrasings are detected, logged and fenced as untrusted data rather than blocked outright — blocking would break legitimate questions like *"ignore the previous METAR, what's the current one?"*.
+**⑦ Terminal 2, start the UI**: `cd frontend`, then `npm install`, then `npm run dev`
 
-Pattern matching is deliberately treated as the weaker layer. The real containment is architectural: the agent has two read-only tools with enum-constrained arguments, no shell, no database and no secrets in context. A successful injection can make the model say something wrong; it cannot make it *do* anything outside those two calls.
+**⑧ Open** http://localhost:8080 🎉
 
-### Token budget
+## Optional settings
 
-LLM tokens are the scarce resource, so the model is only called when there is something new to say:
+Add any of these to `.env`:
 
-- **Briefings get aggregates, not raw data.** `briefing.py` counts aircraft by altitude band, country and airline prefix in Python and sends the model a fixed-size summary. The prompt is the same size for 50 aircraft or 12,000 (~200 tokens for the whole world; one line per aircraft would exceed the model's context).
-- **Briefings regenerate only when the picture changes.** A briefing is reused for 3 minutes; after that it is regenerated only if the totals or the top countries/airlines moved by roughly 10%. Positions change on every poll, so they are deliberately left out of the comparison.
-- **METARs are decoded once per report.** Decodings are cached by raw METAR text and language, so a new model call happens exactly when a new report is issued.
-- **OpenSky results are cached for 30 seconds**, so every consumer of a region shares one fetch.
+🤖 `LLM_MODEL`: Groq model, default `openai/gpt-oss-120b`
 
-Every model call prints its usage to the backend log, e.g. `[llm] briefing: prompt=412 completion=180 total=592` (labels: `briefing`, `metar`, `agent`, `ask`). All caches live in memory: they reset on restart and are not shared between processes. The UI adds its own limits on top — see [frontend/README.md](frontend/README.md).
+🌐 `CORS_ORIGINS`: sites allowed to call the API, default `http://localhost:8080`
+
+💬 `ASK_RATE_LIMIT_PER_MINUTE`: chat questions per user per minute, default `10`
+
+🌦️ `WEATHER_RATE_LIMIT_PER_MINUTE`: weather lookups per user per minute, default `20`
+
+🧵 `WORKER_THREADS`: API worker threads, default `100`
+
+🏢 `USE_SYSTEM_TRUSTSTORE`: set to `1` on corporate networks with certificate errors
+
+## Troubleshooting
+
+😶 **Page loads but shows no data**: check that terminal 1 (the API) is still running
+
+🔀 **Page shows data, but not from your API**: check that `frontend/.env.local` exists (step ⑤)
+
+🔒 **Certificate / SSL errors**: add `USE_SYSTEM_TRUSTSTORE=1` to `.env` and restart the API
+
+⏳ **`429 llm_rate_limited`**: the Groq quota ran out, so wait a minute
+
+## Project map
+
+🧠 **`src/`**: all the logic: data clients, AI calls, RAG, agent, guardrails
+
+🔌 **`api/`**: FastAPI endpoints. See [api/README.md](api/README.md)
+
+🖥️ **`frontend/`**: React web app. See [frontend/README.md](frontend/README.md)
+
+📊 **`evals/`**: weather decoder evaluation
+
+📚 **`knowledge/`**: weather reference docs the AI reads
+
+🧪 **`tests/`**: backend tests (no network, no tokens)
+
+## How the copilot answers
+
+![The question passes guardrails, then the AI model either answers or asks the code to run a tool, up to 5 times](docs/agent-loop.svg)
+
+🔒 **Only 2 read-only tools**: the AI can't do anything beyond reading data
+
+🔁 **Max 5 rounds**: no endless loops
+
+♻️ **Repeated call forces an answer**: the AI never fetches the same data twice
+
+🛡️ **Guardrails flag manipulation**: suspicious questions are logged and answered safely
+
+## Saving AI tokens
+
+📉 **Briefings send counts, not every aircraft**: about 200 tokens, even for the whole world
+
+♻️ **Briefings are reused** until traffic changes by about 10%
+
+🌦️ **Each weather report is decoded once**
+
+⏱️ **Flight data is cached for 30 s**, so all users share one OpenSky call
+
+Every AI call logs its cost, e.g. `[llm] briefing: prompt=412 completion=180`.
 
 ## Evaluation
 
-The decoder is non-deterministic and makes silent factual errors. Real example: `140V200` (wind direction varying 140°–200°) was decoded three different wrong ways across three runs — "gusts to 200°", "visibility 1400–2000m", "visibility 140–200m" — each stated confidently. Inspecting answers by hand does not catch this, so `evals/` measures it.
+The weather decoder is compared field by field with answers checked by hand against the ICAO/FAA spec. Latest run (5 cases × 3):
 
-**Ground truth comes from the ICAO/FAA METAR specification, never from a language model.** An evaluator built from the same knowledge as the system inherits its errors and then certifies them as correct — asked to grade `140V200`, a model would likely have written "visibility 1400–2000m" into the answer key.
+✅ **97.3%** of fields correct
 
-| File | Role |
-| --- | --- |
-| `evals/golden_dataset.json` | METARs paired with hand-verified decodings. Small by design: every case names the failure mode it probes in `tests`, and `synthetic: true` marks METARs built to exercise one rather than observed live |
-| `evals/evaluate.py` | Runs `decode_metar_structured()` on every validated case and compares field by field, by exact equality — no model grades anything |
-| `evals/collect_metars.py` | Appends real METARs as unvalidated cases, excluded from scoring until checked |
-| `evals/predictions.md` | Failure predictions written *before* each run, so intuition is scored against measurement |
-| `evals/results.json` | Latest report, including the model it ran on |
+🎯 **66.7%** perfect runs
 
-**The field contract** is `STRUCTURED_SCHEMA` in `src/decoder.py`. Units are in the field names (`visibility_m`, `height_ft`, `wind_speed_kt`) because unit errors are exactly what the eval must catch. Three decisions worth remembering:
-- **Cloud layers store feet, not the raw code** — `BKN007` is `700`, so "7 feet" or "700 metres" cannot pass.
-- **`ceiling_ft` is derived, not read** — it is the lowest BKN or OVC layer, so `FEW015 BKN030` has a ceiling of 3000. This tests reasoning, not lookup.
-- **`wind_gust_kt` is `null`, never `0`** — `0` would claim a gust exists; collapsing the two would hide a hallucinated gust.
+⚠️ **Open issues**: sometimes explains codes missing from the docs (`VCTS`), and sometimes refuses documented ones (`FEW025`)
 
-**Running it** (venv active, knowledge base built):
-
-    python evals/evaluate.py             # score validated cases, write results.json
-    python evals/evaluate.py --repeat 3  # 3 runs per case — use this
-    python evals/evaluate.py --case ID   # one case
-
-The exit code is 0 only when every run is perfect, so it drops into CI unchanged. A single green run is weak evidence for a non-deterministic system: one bug below was invisible at `--repeat 1` and failed 2 of 3 at `--repeat 3`. **It spends real tokens** — one model call per case per run, on the same Groq key as the app, and the METAR cache deliberately does not apply.
-
-**Latest results** (2026-08-21, `openai/gpt-oss-120b`, `--repeat 3`, 5 validated cases): **97.3% of fields correct, 66.7% perfect runs.**
-- **Solved — `140V200` was a retrieval failure.** With 4 retrieved chunks, the wind, visibility and cloud sections never reached the model, and it correctly refused to decode them. Retrieving 8 fixed it (3/3). That is a stopgap: one embedding of a whole METAR matches no section sharply, and per-group retrieval is the real fix.
-- **Open — under-refusal.** `VCTS` is not in the reference, yet the decoder lists it as decoded (3/3 failed).
-- **Open — over-refusal.** Documented codes such as `FEW025` are flagged as undecodable (2/3 failed).
-
-The decoder is miscalibrated about what it knows in both directions; fixes belong in a tuning step, measured against these numbers.
+Run it with `python evals/evaluate.py --repeat 3`. It spends Groq tokens.
 
 ## Known limitations
 
-- **Partial coverage.** OpenSky relies on volunteer-operated ground receivers with a range of a few hundred kilometres. Coverage is strong over Europe and North America, sparser elsewhere, and **almost absent over oceans** — one world snapshot showed 25 aircraft over the mid-North Atlantic, where hundreds are typically flying. Oceanic tracking needs satellite ADS-B, which only paid providers offer. The data shows *detected* aircraft, not all traffic, and the system always says so.
-- **RAG reduces hallucination, it doesn't eliminate it.** Grounding the model in documentation improves accuracy, but factual errors still occur, and the same input can produce a different error on each run. The evaluation suite measures this; current results and open failures are under [Evaluation](#evaluation).
-- **Guardrails are API-only.** `main.py` calls the agent directly, which is fine for a local terminal.
-- **Briefings can lag slightly.** Because of the cache, a briefing may describe traffic a few minutes old; live counts are always current.
+🌊 **Few aircraft over oceans**: OpenSky relies on volunteer ground receivers
 
-## Tech stack
+🤖 **The AI can still make mistakes**: RAG reduces errors but doesn't remove them
 
-Python · FastAPI · Chroma (vector database) · Groq (default model `openai/gpt-oss-120b`) · OpenSky Network API · Aviation Weather Center API · React · TypeScript · TanStack Start/Query · Tailwind · react-globe.gl
+🛡️ **Guardrails only apply through the API**: the terminal demo calls the agent directly
 
-## Roadmap
+## Commands
 
-- ✅ Live traffic + bilingual briefing
-- ✅ RAG-based METAR decoding
-- ✅ Agent with tool calling
-- ✅ Input guardrails
-- ✅ REST API (FastAPI)
-- ✅ React frontend with 3D globe and world view
-- ✅ Token budget: aggregated briefings, change-based caching, usage logging
-- 🚧 Automated evaluation — deterministic eval running; decoder calibration fixes pending
-- 🚧 Deployment
+🖥️ `python -m src.main`: terminal demo of every feature
 
-## Running locally
+🧪 `pip install pytest && pytest`: backend tests
 
-**Prerequisites:** Python 3.11 or newer, Node.js 20 or newer, plus API credentials.
+📊 `python evals/evaluate.py --repeat 3`: decoder evaluation (spends tokens)
 
-**1. Clone and enter the project**
-
-    git clone https://github.com/eliserps/airspace-copilot.git
-    cd airspace-copilot
-
-**2. Create and activate a virtual environment**
-
-    python -m venv .venv
-
-- Windows (PowerShell): `.venv\Scripts\Activate.ps1`
-- macOS / Linux: `source .venv/bin/activate`
-
-**3. Install dependencies**
-
-    pip install -r requirements.txt
-
-**4. Set up your credentials.** Create a file named `.env` in the project root with:
-
-    GROQ_API_KEY=your_groq_key
-    OPENSKY_CLIENT_ID=your_opensky_client_id
-    OPENSKY_CLIENT_SECRET=your_opensky_client_secret
-    # optional — defaults to openai/gpt-oss-120b
-    LLM_MODEL=openai/gpt-oss-120b
-    # optional — browser origins allowed to call the API (default: the local dev server)
-    CORS_ORIGINS=http://localhost:8080
-    # optional — per-IP requests per minute on the token-spending endpoints
-    ASK_RATE_LIMIT_PER_MINUTE=10
-    WEATHER_RATE_LIMIT_PER_MINUTE=20
-
-Get a Groq key at https://console.groq.com and OpenSky credentials at https://opensky-network.org (Account → API Client). The file is read once at startup, so restart the backend after changing a key.
-
-**5. Build the knowledge base (one time).** This reads the reference docs, creates embeddings and stores them in Chroma:
-
-    python src/rag.py
-
-**6. Run it** — pick what you need:
-
-| Goal | Command | More |
-| --- | --- | --- |
-| Web app | API: `uvicorn api.main:app --reload --port 8000` · UI: `cd frontend && npm install && npm run dev` (two terminals) | [api/](api/README.md), [frontend/](frontend/README.md) |
-| Terminal demo | `python src/main.py` — traffic over South America, three decoded METARs, a briefing and a few agent answers | — |
-| Evaluation | `python evals/evaluate.py --repeat 3` | [Evaluation](#evaluation) |
-
-### Credentials stay in the backend
-
-`GROQ_API_KEY`, `OPENSKY_CLIENT_ID` and `OPENSKY_CLIENT_SECRET` are read only by `src/config.py` from the root `.env`. The browser talks to the API; the API talks to Groq and OpenSky. The frontend's only setting is the public API address.
+📚 `python -m src.rag`: rebuild the knowledge index after editing `knowledge/`

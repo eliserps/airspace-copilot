@@ -2,7 +2,7 @@ import threading
 import time
 
 import requests
-from opensky import get_token, get_aircraft
+from .opensky import get_token, get_aircraft
 
 REGIONS = {
    "south_america": (-56.0, 13.0, -82.0, -34.0),
@@ -51,22 +51,69 @@ def _get_aircraft_authenticated(lamin, lamax, lomin, lomax) -> list:
        return get_aircraft(_cached_token(), lamin, lamax, lomin, lomax)
 
 AIRCRAFT_TTL_SECONDS = 30
+STALE_MAX_SECONDS = 600
+FAILURE_BACKOFF_SECONDS = 15
+RATE_LIMIT_BACKOFF_SECONDS = 60
+RATE_LIMIT_BACKOFF_MAX_SECONDS = 3600
+
 _aircraft_cache: dict[str, tuple[float, list]] = {}
+_failures: dict[str, tuple[float, Exception]] = {}
 _region_locks = {key: threading.Lock() for key in REGIONS}
 
 
-def _fetch_region(key: str) -> list:
+def _backoff_seconds(error: Exception) -> float:
+   response = getattr(error, "response", None)
+   if response is None or response.status_code != 429:
+       return FAILURE_BACKOFF_SECONDS
+   try:
+       retry_after = float(response.headers.get("X-Rate-Limit-Retry-After-Seconds", ""))
+   except ValueError:
+       return RATE_LIMIT_BACKOFF_SECONDS
+   return min(max(retry_after, FAILURE_BACKOFF_SECONDS), RATE_LIMIT_BACKOFF_MAX_SECONDS)
+
+
+def _stale_or_raise(cached: tuple[float, list] | None, error: Exception, now: float) -> dict:
+   if cached and now - cached[0] < STALE_MAX_SECONDS:
+       return {"aircraft": cached[1], "fetched_at": cached[0], "stale": True}
+   raise error
+
+
+def _fetch_region(key: str) -> dict:
    """Fetches state vectors for a known region key, reusing a recent result."""
    with _region_locks[key]:
        now = time.time()
        cached = _aircraft_cache.get(key)
 
        if cached and now - cached[0] < AIRCRAFT_TTL_SECONDS:
-           return cached[1]
+           return {"aircraft": cached[1], "fetched_at": cached[0], "stale": False}
+
+       failure = _failures.get(key)
+       if failure and now < failure[0]:
+           return _stale_or_raise(cached, failure[1], now)
+
        lamin, lamax, lomin, lomax = REGIONS[key]
-       aircraft = _get_aircraft_authenticated(lamin, lamax, lomin, lomax)
-       _aircraft_cache[key] = (time.time(), aircraft)
-       return aircraft
+       try:
+           aircraft = _get_aircraft_authenticated(lamin, lamax, lomin, lomax)
+       except requests.RequestException as error:
+           _failures[key] = (now + _backoff_seconds(error), error)
+           return _stale_or_raise(cached, error, now)
+
+       _failures.pop(key, None)
+       fetched_at = time.time()
+       _aircraft_cache[key] = (fetched_at, aircraft)
+       return {"aircraft": aircraft, "fetched_at": fetched_at, "stale": False}
+
+
+def normalise_region(region: str) -> str:
+   return region.lower().strip()
+
+
+def get_region_snapshot(region: str) -> dict:
+   key = normalise_region(region)
+
+   if key not in REGIONS:
+       raise KeyError(region)
+   return _fetch_region(key)
 
 
 def get_aircraft_for_region(region: str) -> list:
@@ -75,11 +122,7 @@ def get_aircraft_for_region(region: str) -> list:
    Raises KeyError for an unknown region so callers can tell "no such region"
    apart from "region exists but is empty" — those are different answers.
    """
-   key = region.lower().strip()
-
-   if key not in REGIONS:
-       raise KeyError(region)
-   return _fetch_region(key)
+   return get_region_snapshot(region)["aircraft"]
 
 ICAO24 = 0
 CALLSIGN = 1
@@ -93,6 +136,35 @@ TRUE_TRACK = 10
 GEO_ALTITUDE = 13
 
 
+def altitude_of(plane: list) -> float | None:
+   altitude = plane[BARO_ALTITUDE]
+   return plane[GEO_ALTITUDE] if altitude is None else altitude
+
+
+def plot_aircraft(aircraft: list) -> list[dict]:
+   plotted = []
+   for plane in aircraft:
+       latitude = plane[LATITUDE]
+       longitude = plane[LONGITUDE]
+
+       if latitude is None or longitude is None:
+           continue
+
+       plotted.append({
+           "icao24": plane[ICAO24],
+           "callsign": (plane[CALLSIGN] or "").strip() or None,
+           "country": plane[ORIGIN_COUNTRY],
+           "latitude": latitude,
+           "longitude": longitude,
+           "altitude_m": altitude_of(plane),
+           "on_ground": bool(plane[ON_GROUND]),
+           "velocity_ms": plane[VELOCITY],
+           "heading_deg": plane[TRUE_TRACK],
+       })
+
+   return plotted
+
+
 def list_aircraft(region: str) -> list[dict]:
    """Returns aircraft over a region as objects, for plotting on a map.
 
@@ -102,48 +174,32 @@ def list_aircraft(region: str) -> list[dict]:
 
    Raises KeyError for an unknown region, like get_aircraft_for_region().
    """
-   aircraft = get_aircraft_for_region(region)
-
-   plotted = []
-   for plane in aircraft:
-       latitude = plane[LATITUDE]
-       longitude = plane[LONGITUDE]
-
-       if latitude is None or longitude is None:
-           continue
-
-       altitude = plane[BARO_ALTITUDE]
-       if altitude is None:
-           altitude = plane[GEO_ALTITUDE]
-
-       plotted.append({
-           "icao24": plane[ICAO24],
-           "callsign": (plane[CALLSIGN] or "").strip() or None,
-           "country": plane[ORIGIN_COUNTRY],
-           "latitude": latitude,
-           "longitude": longitude,
-           "altitude_m": altitude,
-           "on_ground": bool(plane[ON_GROUND]),
-           "velocity_ms": plane[VELOCITY],
-           "heading_deg": plane[TRUE_TRACK],
-       })
-
-   return plotted
+   return plot_aircraft(get_aircraft_for_region(region))
 
 
 def count_aircraft(region: str) -> str:
    """Returns a summary of aircraft currently detected over a known region."""
    try:
-       aircraft = get_aircraft_for_region(region)
+       snapshot = get_region_snapshot(region)
    except KeyError:
        return f"Unknown region '{region}'. Available: {', '.join(REGIONS)}"
 
+   aircraft = snapshot["aircraft"]
+   note = ""
+   if snapshot["stale"]:
+       age = round(time.time() - snapshot["fetched_at"])
+       note = f" (data from {age} s ago; the live feed is temporarily unavailable)"
+
    if not aircraft:
-       return f"No aircraft detected over {region} right now."
-   lines = [f"{len(aircraft)} aircraft detected over {region}."]
+       return f"No aircraft detected over {region} right now{note}."
+   lines = [f"{len(aircraft)} aircraft detected over {region}{note}."]
 
    for plane in aircraft[:5]:
-       callsign = (plane[1] or "").strip() or "unknown"
-       lines.append(f"- {callsign} at {plane[7]} m")
+       callsign = (plane[CALLSIGN] or "").strip() or "unknown"
+       altitude = altitude_of(plane)
+       where = "on ground" if plane[ON_GROUND] else (
+           "altitude unknown" if altitude is None else f"at {altitude:.0f} m"
+       )
+       lines.append(f"- {callsign} {where}")
 
    return "\n".join(lines)

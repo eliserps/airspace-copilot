@@ -1,8 +1,8 @@
 import json
 
-from config import LANGUAGE_NAMES
-from llm import ask
-from rag import search
+from .config import LANGUAGE_NAMES
+from .llm import ask
+from .rag import search
 
 SYSTEM_PROMPT = """You are an aviation weather decoder.
 

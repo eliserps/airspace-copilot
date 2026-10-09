@@ -39,7 +39,6 @@ import re
 import unicodedata
 
 MAX_QUESTION_LENGTH = 500
-MIN_QUESTION_LENGTH = 1
 
 INJECTION_PATTERNS = [
     (r"\bignore\s+(all\s+|any\s+)?(previous|prior|above|earlier)\b", "instruction_override"),
@@ -56,12 +55,18 @@ INJECTION_PATTERNS = [
     (r"^\s*(system|assistant)\s*:", "fake_turn"),
     (r"<\|?(im_start|im_end|system|endoftext)\|?>", "fake_turn"),
     (r"\[/?INST\]", "fake_turn"),
+    (r"\bignore\s+(todas\s+|quaisquer\s+)?(as\s+)?(instru[cç][oõ]es|regras|mensagens)\s+(anteriores|acima)", "instruction_override"),
+    (r"\b(desconsidere|esque[cç]a)\s+(tudo|todas|as\s+instru[cç][oõ]es|suas\s+(instru[cç][oõ]es|regras))", "instruction_override"),
+    (r"\bvoc[eê]\s+(agora\s+[eé]|n[aã]o\s+[eé]\s+mais)\b", "role_escape"),
+    (r"\b(finja|fa[cç]a\s+de\s+conta)\s+(ser|que)\b", "role_escape"),
+    (r"\b(aja|atue)\s+como\s+(se\s+fosse\s+)?(um|uma|o|a)\b", "role_escape"),
+    (r"\b(revele|mostre|imprima|repita|exiba)\s+(me\s+)?(o\s+|as\s+|seu\s+|suas\s+)?(prompt|instru[cç][oõ]es|regras)", "prompt_extraction"),
 ]
 
 COMPILED_PATTERNS = [(re.compile(p, re.IGNORECASE | re.MULTILINE), label)
                      for p, label in INJECTION_PATTERNS]
 
-INVISIBLE_CHARS = re.compile(r"[​-‏‪-‮⁠-⁤﻿]")
+INVISIBLE_CHARS = re.compile("[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]")
 
 
 class GuardrailRejection(Exception):
@@ -120,11 +125,6 @@ def check_question(text: str | None) -> dict:
     if not cleaned:
         raise GuardrailRejection(
             "empty_question", "Question cannot be empty."
-        )
-
-    if len(cleaned) < MIN_QUESTION_LENGTH:
-        raise GuardrailRejection(
-            "question_too_short", "Question is too short."
         )
 
     if len(cleaned) > MAX_QUESTION_LENGTH:
