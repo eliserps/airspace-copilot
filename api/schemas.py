@@ -5,9 +5,10 @@ openapi.json, which is what the frontend integrates against. They describe what 
 existing src/ functions already return -- they do not reshape anything.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
-from config import LANGUAGE_NAMES
+from src.config import LANGUAGE_NAMES
+from src.tools import REGIONS
 
 LANGUAGES = tuple(LANGUAGE_NAMES)
 
@@ -19,6 +20,22 @@ class AskRequest(BaseModel):
         description="Natural-language question about traffic or weather.",
         examples=["Is the weather good for landing at Guarulhos?"],
     )
+    region: str | None = Field(
+        default=None,
+        description="Map region the user is viewing, one of the regions from "
+                    "/health. Lets \"how many planes here?\" resolve.",
+        examples=["south_america"],
+    )
+
+    @field_validator("region")
+    @classmethod
+    def known_region(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        key = value.lower().strip()
+        if key not in REGIONS:
+            raise ValueError(f"region must be one of {sorted(REGIONS)}")
+        return key
 
 
 class HealthResponse(BaseModel):
@@ -31,9 +48,15 @@ class BriefingResponse(BaseModel):
     region: str
     language: str
     aircraft_count: int = Field(
-        description="Real count from OpenSky, not parsed from the text."
+        description="Real count from OpenSky, not parsed from the text: the "
+                    "count of the snapshot the briefing was written from, so "
+                    "it agrees with the numbers in the text."
     )
     briefing: str = Field(description="Markdown.")
+    generated_at: float = Field(
+        description="Unix time (seconds) the briefing text was generated. A "
+                    "cached briefing can be a few minutes older than the request."
+    )
     source: str
 
 
@@ -80,6 +103,11 @@ class AircraftMapResponse(BaseModel):
     )
     bounds: Bounds = Field(description="Region bounding box, for the initial viewport.")
     aircraft: list[Aircraft]
+    fetched_at: float = Field(description="Unix time (seconds) of the OpenSky fetch.")
+    stale: bool = Field(
+        description="True when OpenSky is failing and this is the last good "
+                    "result (at most 10 minutes old) instead of live data."
+    )
     source: str
 
 

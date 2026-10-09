@@ -1,105 +1,65 @@
-# Frontend
+# 🖥️ Frontend
 
-React + TypeScript web UI for airspace-copilot: a 3D globe with live aircraft, the copilot chat, regional briefings and decoded METAR weather. Project overview and backend setup are in the [root README](../README.md); the endpoint contract is in [api/README.md](../api/README.md).
+React + TypeScript web app. It only shows what the API returns; there is no logic and no secrets here.
 
-This app is a **thin rendering layer** — no database, no auth, no business logic, no credentials. Everything it shows comes from the API.
+![Screen map: header on top, the 3D globe on the left, four tabs on the right, each with its component file](../docs/frontend-layout.svg)
 
-## Running
+## Run it
 
-With the API already running on port 8000:
+Start the API first ([root README](../README.md#quick-start)), then, inside `frontend/`:
 
-    cd frontend
-    npm install
-    npm run dev
+**① Point to your local API**: create `.env.local` containing `VITE_API_BASE_URL=http://localhost:8000`
 
-The app opens at http://localhost:8080 (set in `vite.config.ts`).
+**② Install packages** (first time only): `npm install`
 
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Development server with hot reload |
-| `npm run build` | Production build |
-| `npm run lint` | ESLint + Prettier check |
-| `npm run format` | Prettier, writing fixes |
+**③ Start**: `npm run dev`, then open http://localhost:8080
 
-## Configuration
+**Other commands**
 
-The only setting is the API address:
+`npm run dev`: dev server, reloads on save
 
-| Variable | Purpose |
-| --- | --- |
-| `VITE_API_BASE_URL` | Base URL of the FastAPI backend, no trailing slash |
+`npm run build`: production build
 
-Put `VITE_API_BASE_URL=http://localhost:8000` in `frontend/.env.local` for local work. Both `.env` and `.env.local` are gitignored; with neither, `src/config.ts` falls back to the deployed API on Render.
+`npm run lint`: code style check
 
-**Never give a `VITE_` variable a secret.** Vite inlines every `VITE_`-prefixed value into the bundle the browser downloads, so that prefix is a publication mechanism, not a convention.
+`npm run typecheck`: checks TypeScript types without building
 
-## Structure
+`npm run format`: auto-formats the code
 
-| Path | Responsibility |
-| --- | --- |
-| `src/config.ts` | API address, region list (centre, zoom, default airport) and display limits |
-| `src/lib/api.ts` | The only module that calls `fetch`: request helper, typed responses, `ApiError` |
-| `src/lib/units.ts` | Metric → feet and knots, with unit labels |
-| `src/lib/markers.ts` | Plane icon, altitude bands and globe sampling |
-| `src/lib/sun.ts` | Subsolar point, so the globe's day/night lighting matches the real time |
-| `src/lib/i18n*.ts(x)` | Translations — see *Internationalisation* |
-| `src/routes/index.tsx` | The single page: header, globe, tabs, traffic polling |
-| `src/components/` | One component per panel (`GlobeView`, `ChatPanel`, `TrafficList`, `BriefingPanel`, `WeatherCard`, `AircraftDetail`…) |
-| `src/server.ts`, `src/start.ts` | SSR entry and request middleware: a plain error page on failures, CSRF protection for server functions |
+## Where to find things
 
-Routing is file-based (TanStack Start): each file in `src/routes/` is a route, `__root.tsx` is the app shell, and `routeTree.gen.ts` is generated — never edit it by hand.
+📐 **Page layout**: `src/routes/index.tsx`
 
-**Production build.** `npm run build` targets Cloudflare Workers through Nitro (`defaultPreset` in `vite.config.ts`); change the preset there to deploy elsewhere, e.g. `node-server`.
+🧩 **A panel** (chat, list, briefing, weather): `src/components/`
 
-## Talking to the API
+🔌 **Calls to the backend**: `src/lib/api.ts`
 
-Components call `api.*` from `src/lib/api.ts` through TanStack Query and never build a URL themselves. Errors arrive as `ApiError`, whose `.code` is the API's stable error slug, so the UI branches on the cause rather than on message text.
+⚙️ **Regions, default airports, API address**: `src/config.ts`
 
-How the UI honours the contract:
+🌐 **Texts and translations**: `src/lib/i18n-strings.ts`
 
-- **Units** — `altitude_m` and `velocity_ms` are converted by `units.ts`; every rendered value carries its unit.
-- **Identity** — `icao24` is the React key; `callsign` is nullable and not unique.
-- **Heading** — `heading_deg` drives a CSS `rotate()`, so each marker points where it is flying.
-- **Markdown** — `briefing`, `decoded` and `answer` go through `<Markdown>`, never raw.
-- **Guardrails** — `flagged: true` on `/ask` shows a badge on the answer rather than hiding it.
-- **Coverage** — `source` is displayed, so the partial OpenSky coverage is never presented as complete.
+⛔ **Don't edit** `src/routeTree.gen.ts`. It is generated automatically.
 
-## The four tabs
+## Globe markers
 
-Each maps to a distinct backend capability, not to a different view of the same data:
+🟨 **Yellow**: low, below ~3,000 m
 
-- **Copilot** — free-form questions to the agent (`/ask`).
-- **Traffic** — the live aircraft behind the globe, as a list (first 300 rows when a region has more).
-- **Briefing** — region, tracked count and update time in a stat header, then the generated narrative (`/briefing`).
-- **Weather** — the raw METAR in a compact strip above its decoding (`/weather/{icao}`); the airport defaults to one per region.
+🟧 **Orange**: medium, 3,000–9,000 m
 
-## The globe
+🟪 **Violet**: cruising, above ~9,000 m
 
-Marker colour comes from `altitudeBand()` in `markers.ts`:
+⬜ **Grey**: on the ground
 
-| Colour | Meaning |
-| --- | --- |
-| Yellow | Below FL100, or no altitude reported |
-| Orange | FL100–FL300 |
-| Violet | Above FL300 |
-| Grey | On the ground |
-| Gold, enlarged | Selected |
+Above 1,500 aircraft the globe draws a spread-out sample, while the counter always shows the real total.
 
-Each marker is a DOM element, so past `MAX_GLOBE_MARKERS` (1,500) the globe draws a sample from `sampleSpread()`: one aircraft per 5°×5° cell per round. Sparse areas — oceans, Africa — keep every aircraft and only dense ones are thinned; a plain every-Nth sample would erase the few oceanic aircraft first. The header counter always shows the real total, and the legend says when the map is sampled.
+## Data refresh
 
-## Data freshness
+✈️ **Aircraft**: every 60 s while **Live** is on, because positions change constantly
 
-The backend caches LLM output (see *Token budget* in the [root README](../README.md#token-budget)); the query settings here are aligned so the UI does not ask for what cannot have changed:
+📝 **Briefing**: every 5 min, because it uses AI and traffic changes slowly
 
-| Data | Refresh |
-| --- | --- |
-| Live traffic | Every 60 s while **Live** is on; never calls the model |
-| Briefing | Fresh for 5 minutes |
-| Weather | Fresh for 15 minutes |
-| Any query | Never refetched just because the window regained focus |
+🌦️ **Weather**: every 15 min, because it uses AI and new reports are rare
 
-## Internationalisation
+🚫 **4xx errors**: never retried, because retrying won't fix them
 
-`src/lib/i18n-strings.ts` holds the string tables (pure data), `src/lib/i18n-context.ts` the context and `useI18n` hook, and `src/lib/i18n.tsx` only the provider component. The split keeps React Fast Refresh working — a file that exports both a component and a hook breaks hot reload.
-
-The header switch sets the locale, persists it to `localStorage` and passes `lang` to the API, so briefing and METAR text come back translated too, not just the chrome.
+⚠️ **OpenSky down**: the last positions stay on the map with a **Stale** badge

@@ -1,5 +1,5 @@
 import requests
-from config import OPENSKY_CLIENT_ID, OPENSKY_CLIENT_SECRET
+from .config import OPENSKY_CLIENT_ID, OPENSKY_CLIENT_SECRET
 
 TOKEN_URL = "https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token"
 API_URL = "https://opensky-network.org/api/states/all"

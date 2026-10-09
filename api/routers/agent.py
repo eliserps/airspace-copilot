@@ -9,8 +9,8 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from agent import run_agent
-from guardrails import GuardrailRejection, check_question
+from src.agent import run_agent
+from src.guardrails import GuardrailRejection, check_question
 
 from ..errors import error_detail
 from ..ratelimit import ask_limiter
@@ -34,7 +34,7 @@ def ask(payload: AskRequest):
     if checked["suspicious"]:
         log.warning("possible injection attempt: flags=%s", checked["flags"])
 
-    answer = run_agent(checked["question"])
+    answer = run_agent(checked["question"], region=payload.region)
 
     if not answer or not answer.strip():
         raise HTTPException(

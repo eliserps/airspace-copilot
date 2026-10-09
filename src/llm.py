@@ -1,9 +1,28 @@
+import threading
+
 from groq import Groq
-from config import GROQ_API_KEY, LLM_MODEL
+
+from .config import GROQ_API_KEY, LLM_MODEL
 
 LLM_TIMEOUT_SECONDS = 30
 
-client = Groq(api_key=GROQ_API_KEY, timeout=LLM_TIMEOUT_SECONDS, max_retries=2)
+
+class LLMNotConfigured(RuntimeError):
+   pass
+
+
+_client: Groq | None = None
+_client_lock = threading.Lock()
+
+
+def get_client() -> Groq:
+   global _client
+   with _client_lock:
+       if _client is None:
+           if not GROQ_API_KEY:
+               raise LLMNotConfigured("GROQ_API_KEY is not set.")
+           _client = Groq(api_key=GROQ_API_KEY, timeout=LLM_TIMEOUT_SECONDS, max_retries=2)
+       return _client
 
 
 def log_usage(label: str, usage) -> None:
@@ -30,7 +49,7 @@ def ask(
        messages.append({"role": "system", "content": system_prompt})
    messages.append({"role": "user", "content": prompt})
    extra = {"response_format": {"type": "json_object"}} if json_mode else {}
-   response = client.chat.completions.create(
+   response = get_client().chat.completions.create(
        model=LLM_MODEL,
        messages=messages,
        temperature=0.2,

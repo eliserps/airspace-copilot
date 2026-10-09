@@ -1,12 +1,20 @@
-import truststore
-truststore.inject_into_ssl()
-
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(env_path)
+
+
+def _flag(name: str, default: str = "0") -> bool:
+    return os.getenv(name, default).strip().lower() in ("1", "true", "yes", "on")
+
+
+if _flag("USE_SYSTEM_TRUSTSTORE"):
+    import truststore
+
+    truststore.inject_into_ssl()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
@@ -24,5 +32,7 @@ CORS_ORIGINS = [
 
 ASK_RATE_LIMIT_PER_MINUTE = int(os.getenv("ASK_RATE_LIMIT_PER_MINUTE", "10"))
 WEATHER_RATE_LIMIT_PER_MINUTE = int(os.getenv("WEATHER_RATE_LIMIT_PER_MINUTE", "20"))
+
+WORKER_THREADS = int(os.getenv("WORKER_THREADS", "100"))
 
 LANGUAGE_NAMES = {"en": "English", "pt": "Brazilian Portuguese"}

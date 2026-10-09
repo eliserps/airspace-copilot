@@ -3,8 +3,8 @@ import threading
 import time
 from collections import Counter
 
-from config import LANGUAGE_NAMES
-from llm import ask
+from .config import LANGUAGE_NAMES
+from .llm import ask
 
 SYSTEM_PROMPT = """You are an airspace analyst assistant.
 
@@ -124,24 +124,28 @@ def _fingerprint(stats: dict) -> tuple:
 
 def generate_briefing(aircraft: list, region: str, language: str = "en") -> str:
    """Generates a natural-language briefing of the current airspace."""
+   return generate_briefing_with_meta(aircraft, region, language)["text"]
+
+
+def generate_briefing_with_meta(aircraft: list, region: str, language: str = "en") -> dict:
    stats = summarize_aircraft(aircraft)
    key = (region.lower().strip(), language)
    with _briefing_locks.setdefault(key, threading.Lock()):
        return _generate_briefing_locked(stats, key, region, language)
 
 
-def _generate_briefing_locked(stats: dict, key: tuple[str, str], region: str, language: str) -> str:
+def _generate_briefing_locked(stats: dict, key: tuple[str, str], region: str, language: str) -> dict:
    """Body of generate_briefing(); must run while holding the lock for `key`."""
    now = time.time()
    cached = _briefings.get(key)
 
    if cached and now - cached["at"] < BRIEFING_TTL_SECONDS:
-       return cached["text"]
+       return _result(cached)
 
    fingerprint = _fingerprint(stats)
    if cached and cached["fingerprint"] == fingerprint:
        print(f"[briefing] {key} unchanged, reusing")
-       return cached["text"]
+       return _result(cached)
 
    language_name = LANGUAGE_NAMES[language]
    prompt = f"""Write a short airspace briefing for: {region}
@@ -154,6 +158,14 @@ Write the briefing in {language_name}. Cover:
 4. A one-line reminder that coverage is partial
 Keep it under 150 words."""
    text = ask(prompt, system_prompt=SYSTEM_PROMPT, label="briefing")
+   entry = {"text": text or "", "fingerprint": fingerprint, "at": now,
+            "count": stats["total"]}
    if text and text.strip():
-       _briefings[key] = {"text": text, "fingerprint": fingerprint, "at": now}
-   return text
+       _briefings[key] = entry
+   return _result(entry)
+
+
+def _result(entry: dict) -> dict:
+   return {"text": entry["text"], "aircraft_count": entry["count"],
+           "generated_at": entry["at"]}
+

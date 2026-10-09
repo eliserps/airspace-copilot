@@ -15,8 +15,8 @@ export function BriefingPanel({ region, regionLabel }: { region: string; regionL
     staleTime: 5 * 60_000,
   });
 
-  const updatedAt = q.dataUpdatedAt
-    ? new Date(q.dataUpdatedAt).toLocaleTimeString(locale === "pt" ? "pt-BR" : "en-US", {
+  const updatedAt = q.data?.generated_at
+    ? new Date(q.data.generated_at * 1000).toLocaleTimeString(locale === "pt" ? "pt-BR" : "en-US", {
         hour: "2-digit",
         minute: "2-digit",
       })

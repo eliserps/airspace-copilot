@@ -73,10 +73,10 @@ function Index() {
     refetchInterval: live ? 60_000 : false,
     staleTime: 45_000,
     placeholderData: keepPreviousData,
-    retry: 2,
   });
 
   const aircraft = useMemo(() => traffic.data?.aircraft ?? [], [traffic.data]);
+  const stale = traffic.data?.stale === true || (traffic.isError && aircraft.length > 0);
   const selected = aircraft.find((a) => a.icao24 === selectedId) ?? null;
 
   const globeAircraft = useMemo(() => {
@@ -182,7 +182,7 @@ function Index() {
                   aircraft={globeAircraft}
                   region={region}
                   selectedId={selectedId}
-                  onSelect={(id) => setSelectedId(id)}
+                  onSelect={setSelectedId}
                 />
               </Suspense>
             </ClientOnly>
@@ -196,10 +196,12 @@ function Index() {
                   {traffic.isPending ? "—" : String(aircraft.length)}
                 </p>
               </div>
-              {traffic.isError && aircraft.length > 0 ? (
+              {stale ? (
                 <span
                   className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-500"
-                  title={traffic.error instanceof ApiError ? traffic.error.message : undefined}
+                  title={
+                    traffic.error instanceof ApiError ? traffic.error.message : t("state.staleHint")
+                  }
                 >
                   {t("state.stale")}
                 </span>
@@ -291,9 +293,9 @@ function Index() {
           </nav>
 
           <div className="min-h-0 flex-1 overflow-hidden">
-            {tab === "copilot" ? (
-              <ChatPanel region={t(`region.${region.id}` as StringKey)} />
-            ) : null}
+            <div className={cn("h-full", tab !== "copilot" && "hidden")}>
+              <ChatPanel regionId={region.id} regionLabel={t(`region.${region.id}` as StringKey)} />
+            </div>
             {tab === "traffic" ? (
               <div className="h-full overflow-y-auto">
                 {traffic.isPending ? (
@@ -322,7 +324,9 @@ function Index() {
                 regionLabel={t(`region.${region.id}` as StringKey)}
               />
             ) : null}
-            {tab === "weather" ? <WeatherCard defaultIcao={region.metar} /> : null}
+            {tab === "weather" ? (
+              <WeatherCard key={region.metar} defaultIcao={region.metar} />
+            ) : null}
           </div>
         </section>
       </div>

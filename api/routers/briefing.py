@@ -1,9 +1,9 @@
-"""Airspace briefing endpoint. Calls generate_briefing() from src/."""
+"""Airspace briefing endpoint. Calls generate_briefing_with_meta() from src/."""
 
 from fastapi import APIRouter, Query
 
-from briefing import generate_briefing
-from tools import REGIONS, get_aircraft_for_region
+from src.briefing import generate_briefing_with_meta
+from src.tools import REGIONS, get_aircraft_for_region, normalise_region
 
 from ..errors import SOURCE_OPENSKY, invalid_language, unknown_region
 from ..schemas import LANGUAGES, BriefingResponse
@@ -24,10 +24,14 @@ def briefing(
     except KeyError:
         raise unknown_region(region, list(REGIONS))
 
+    key = normalise_region(region)
+    result = generate_briefing_with_meta(aircraft, key, lang)
+
     return {
-        "region": region,
+        "region": key,
         "language": lang,
-        "aircraft_count": len(aircraft),
-        "briefing": generate_briefing(aircraft, region, lang),
+        "aircraft_count": result["aircraft_count"],
+        "briefing": result["text"],
+        "generated_at": result["generated_at"],
         "source": SOURCE_OPENSKY,
     }

@@ -14,14 +14,16 @@ type Msg =
 
 const SUGGESTION_KEYS: StringKey[] = ["copilot.suggest1", "copilot.suggest2", "copilot.suggest3"];
 
-export function ChatPanel({ region }: { region: string }) {
+type AskVars = { question: string; region: string };
+
+export function ChatPanel({ regionId, regionLabel }: { regionId: string; regionLabel: string }) {
   const { t } = useI18n();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const ask = useMutation({
-    mutationFn: (question: string) => api.ask(question),
+    mutationFn: ({ question, region }: AskVars) => api.ask(question, region),
     onSuccess: (res) =>
       setMessages((m) => [
         ...m,
@@ -43,7 +45,11 @@ export function ChatPanel({ region }: { region: string }) {
     if (!q || ask.isPending) return;
     setMessages((m) => [...m, { id: crypto.randomUUID(), role: "user", text: q }]);
     setInput("");
-    ask.mutate(q);
+    ask.mutate({ question: q, region: regionId });
+  }
+
+  function retry() {
+    if (ask.variables && !ask.isPending) ask.mutate(ask.variables);
   }
 
   return (
@@ -56,7 +62,7 @@ export function ChatPanel({ region }: { region: string }) {
               <p className="label-caps text-primary">{t("copilot.standingBy")}</p>
             </div>
             <p className="text-sm text-muted-foreground">
-              {t("copilot.ask")} <span className="font-mono text-foreground">{region}</span>.
+              {t("copilot.ask")} <span className="font-mono text-foreground">{regionLabel}</span>.
             </p>
             <div className="flex flex-wrap gap-2">
               {SUGGESTION_KEYS.map((key) => (
@@ -105,7 +111,7 @@ export function ChatPanel({ region }: { region: string }) {
         {ask.isError ? (
           <ErrorState
             message={ask.error instanceof ApiError ? ask.error.message : t("copilot.failed")}
-            onRetry={() => ask.reset()}
+            onRetry={retry}
           />
         ) : null}
       </div>

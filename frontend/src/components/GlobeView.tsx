@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Globe, { type GlobeMethods } from "react-globe.gl";
 import { AmbientLight, DirectionalLight } from "three";
 import type { Aircraft } from "@/lib/api";
@@ -18,6 +18,9 @@ type MarkerDatum = Aircraft & { lat: number; lng: number };
 const tileUrl = (x: number, y: number, level: number) =>
   `https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${level}/${y}/${x}`;
 
+const markerLat = (d: object) => (d as MarkerDatum).lat;
+const markerLng = (d: object) => (d as MarkerDatum).lng;
+
 export default function GlobeView({ aircraft, region, selectedId, onSelect }: Props) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
@@ -26,6 +29,8 @@ export default function GlobeView({ aircraft, region, selectedId, onSelect }: Pr
   const selectedRef = useRef<string | null>(selectedId);
   selectedRef.current = selectedId;
   const markerDataRef = useRef(new Map<string, MarkerDatum>());
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -136,6 +141,36 @@ export default function GlobeView({ aircraft, region, selectedId, onSelect }: Pr
     return () => el.removeEventListener("wheel", swallow);
   }, []);
 
+  const markerElement = useCallback((obj: object) => {
+    const d = obj as MarkerDatum;
+    const el = document.createElement("div");
+    el.className = "ac-marker";
+    el.dataset["icao"] = d.icao24;
+    el.dataset["ground"] = String(d.on_ground);
+    el.dataset["band"] = altitudeBand(d.altitude_m);
+    el.dataset["selected"] = String(selectedRef.current === d.icao24);
+    const name = d.callsign?.trim() || d.icao24;
+    el.title = name;
+    el.setAttribute("role", "button");
+    el.setAttribute("tabindex", "0");
+    el.setAttribute("aria-label", name);
+    el.innerHTML = PLANE_SVG;
+    const svg = el.firstElementChild as SVGElement | null;
+    if (svg) svg.style.transform = `rotate(${d.heading_deg ?? 0}deg)`;
+    const pick = (e: Event) => {
+      e.stopPropagation();
+      onSelectRef.current(d.icao24);
+    };
+    el.addEventListener("click", pick);
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        pick(e);
+      }
+    });
+    return el;
+  }, []);
+
   return (
     <div ref={wrapRef} className="absolute inset-0 touch-none">
       {size.width > 0 && (
@@ -150,39 +185,11 @@ export default function GlobeView({ aircraft, region, selectedId, onSelect }: Pr
           atmosphereAltitude={0.22}
           animateIn={true}
           htmlElementsData={data}
-          htmlLat={(d: object) => (d as MarkerDatum).lat}
-          htmlLng={(d: object) => (d as MarkerDatum).lng}
+          htmlLat={markerLat}
+          htmlLng={markerLng}
           htmlAltitude={0.012}
           htmlTransitionDuration={0}
-          htmlElement={(obj: object) => {
-            const d = obj as MarkerDatum;
-            const el = document.createElement("div");
-            el.className = "ac-marker";
-            el.dataset["icao"] = d.icao24;
-            el.dataset["ground"] = String(d.on_ground);
-            el.dataset["band"] = altitudeBand(d.altitude_m);
-            el.dataset["selected"] = String(selectedRef.current === d.icao24);
-            const name = d.callsign?.trim() || d.icao24;
-            el.title = name;
-            el.setAttribute("role", "button");
-            el.setAttribute("tabindex", "0");
-            el.setAttribute("aria-label", name);
-            el.innerHTML = PLANE_SVG;
-            const svg = el.firstElementChild as SVGElement | null;
-            if (svg) svg.style.transform = `rotate(${d.heading_deg ?? 0}deg)`;
-            const pick = (e: Event) => {
-              e.stopPropagation();
-              onSelect(d.icao24);
-            };
-            el.addEventListener("click", pick);
-            el.addEventListener("keydown", (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                pick(e);
-              }
-            });
-            return el;
-          }}
+          htmlElement={markerElement}
         />
       )}
     </div>

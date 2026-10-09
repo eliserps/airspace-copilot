@@ -11,26 +11,44 @@ api/routers/, grouped by domain.
 Run:  uvicorn api.main:app --reload --port 8000
 """
 
-import sys
-from pathlib import Path
+import logging
+import threading
+from contextlib import asynccontextmanager
 
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "src"))
+import anyio.to_thread
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from fastapi import FastAPI  # noqa: E402
-from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from src.config import CORS_ORIGINS, WORKER_THREADS
+from src.rag import warm_up
+from src.tools import REGIONS
 
-from config import CORS_ORIGINS  # noqa: E402
-from tools import REGIONS  # noqa: E402
+from .errors import register_error_handlers
+from .routers import aircraft, agent, briefing, weather
+from .schemas import LANGUAGES, HealthResponse
 
-from .errors import register_error_handlers  # noqa: E402
-from .routers import aircraft, agent, briefing, weather  # noqa: E402
-from .schemas import LANGUAGES, HealthResponse  # noqa: E402
+log = logging.getLogger("airspace.startup")
+
+
+def _warm_up_rag() -> None:
+    try:
+        warm_up()
+    except Exception:  # noqa: BLE001
+        log.exception("RAG warm-up failed; it will be retried on the first METAR request")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    anyio.to_thread.current_default_thread_limiter().total_tokens = WORKER_THREADS
+    threading.Thread(target=_warm_up_rag, name="rag-warm-up", daemon=True).start()
+    yield
+
 
 app = FastAPI(
     title="airspace-copilot API",
     description="Live flight data and aviation weather, explained in natural language.",
-    version="1.1.0",
+    version="1.2.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -50,6 +68,6 @@ app.include_router(agent.router)
 
 
 @app.get("/health", tags=["meta"], response_model=HealthResponse)
-def health():
+async def health():
     """Liveness check. Does not touch upstream services, so it stays fast."""
     return {"status": "ok", "regions": sorted(REGIONS), "languages": list(LANGUAGES)}

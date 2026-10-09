@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 420" width="980" height="420" font-family="Segoe UI, -apple-system, Helvetica, Arial, sans-serif">
+  <g fill="#ffffff">
+    <rect x="10" y="10" width="960" height="50" rx="10" fill="#475569"/>
+    <text x="30" y="41" font-size="16" font-weight="700">Header</text>
+    <text x="100" y="41" font-size="14" opacity="0.9">EN/PT · region · Live · Refresh</text>
+    <text x="950" y="41" font-size="13" text-anchor="end" font-family="Consolas, Menlo, monospace">routes/index.tsx</text>
+
+    <rect x="10" y="70" width="600" height="340" rx="12" fill="#7c5cff"/>
+    <text x="310" y="225" font-size="22" font-weight="700" text-anchor="middle">3D globe</text>
+    <text x="310" y="250" font-size="14" text-anchor="middle" font-family="Consolas, Menlo, monospace">GlobeView.tsx</text>
+
+    <rect x="25" y="85" width="150" height="44" rx="8" fill="#ffffff" fill-opacity="0.2"/>
+    <text x="100" y="112" font-size="13" text-anchor="middle">Aircraft count</text>
+
+    <rect x="25" y="362" width="230" height="36" rx="8" fill="#ffffff" fill-opacity="0.2"/>
+    <text x="140" y="385" font-size="13" text-anchor="middle">Altitude legend · data source</text>
+
+    <rect x="420" y="300" width="175" height="98" rx="8" fill="#ffffff" fill-opacity="0.2"/>
+    <text x="507" y="338" font-size="13" text-anchor="middle">Selected aircraft</text>
+    <text x="507" y="360" font-size="12" text-anchor="middle" font-family="Consolas, Menlo, monospace">AircraftDetail.tsx</text>
+
+    <rect x="620" y="70" width="350" height="340" rx="12" fill="#0f9d8a"/>
+    <rect x="620" y="70" width="350" height="48" rx="12" fill="#0b6f62"/>
+    <text x="795" y="100" font-size="14" font-weight="700" text-anchor="middle">Copilot · Traffic · Briefing · Weather</text>
+
+    <g font-size="15">
+      <text x="645" y="165" font-weight="700">Copilot</text>
+      <text x="645" y="187" font-size="13" font-family="Consolas, Menlo, monospace" opacity="0.9">ChatPanel.tsx</text>
+      <text x="645" y="235" font-weight="700">Traffic</text>
+      <text x="645" y="257" font-size="13" font-family="Consolas, Menlo, monospace" opacity="0.9">TrafficList.tsx</text>
+      <text x="645" y="305" font-weight="700">Briefing</text>
+      <text x="645" y="327" font-size="13" font-family="Consolas, Menlo, monospace" opacity="0.9">BriefingPanel.tsx</text>
+      <text x="645" y="375" font-weight="700">Weather</text>
+      <text x="645" y="397" font-size="13" font-family="Consolas, Menlo, monospace" opacity="0.9">WeatherCard.tsx</text>
+    </g>
+    <g font-size="13" opacity="0.9" text-anchor="end">
+      <text x="950" y="176">ask the AI</text>
+      <text x="950" y="246">aircraft list</text>
+      <text x="950" y="316">AI summary</text>
+      <text x="950" y="386">METAR decoded</text>
+    </g>
+  </g>
+</svg>
