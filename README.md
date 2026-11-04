@@ -37,21 +37,21 @@ An AI copilot that explains live air traffic and aviation weather in plain Engli
 
 **Steps**
 
-**① Add your keys**: create `backend/.env` with `GROQ_API_KEY`, `OPENSKY_CLIENT_ID` and `OPENSKY_CLIENT_SECRET`
+**① Add your keys**: copy `backend/.env.example` to `backend/.env` and fill in `GROQ_API_KEY`, `OPENSKY_CLIENT_ID` and `OPENSKY_CLIENT_SECRET`
 
-**② Point the UI to your API**: create `frontend/.env.local` containing `VITE_API_BASE_URL=http://localhost:8000`
-
-**③ Terminal 1, start the API**: `cd backend`, then `uv sync`, then `uv run uvicorn app.main:app --reload --port 8000`
+**② Terminal 1, start the API**: `cd backend`, then `uv sync`, then `uv run uvicorn app.main:app --reload --port 8000`
 
 🧰 **Prefer pip?** Create and activate a venv (`python -m venv .venv`, then `.venv\Scripts\Activate.ps1`; macOS/Linux: `source .venv/bin/activate`), then `cd backend`, `pip install -e . --group dev` (pip 25.1+) and `uvicorn app.main:app --reload --port 8000`
 
-**④ Terminal 2, start the UI**: `cd frontend`, then `npm install`, then `npm run dev`
+**③ Terminal 2, start the UI**: `cd frontend`, then `npm install`, then `npm run dev`
 
-**⑤ Open** http://localhost:8080 🎉
+**④ Open** http://localhost:8080 🎉
+
+The UI calls the API at `http://localhost:8000` by default. To use another address, copy `frontend/.env.example` to `frontend/.env.local` and change `VITE_API_BASE_URL`.
 
 ## Optional settings
 
-Add any of these to `backend/.env`:
+Add any of these to `backend/.env` (all listed in `backend/.env.example`):
 
 🤖 `LLM_MODEL`: Groq model, default `openai/gpt-oss-120b`
 
@@ -69,7 +69,7 @@ Add any of these to `backend/.env`:
 
 😶 **Page loads but shows no data**: check that terminal 1 (the API) is still running
 
-🔀 **Page shows data, but not from your API**: check that `frontend/.env.local` exists (step ②)
+🔀 **UI calling the wrong API**: check `VITE_API_BASE_URL` in `frontend/.env.local`, then restart `npm run dev`
 
 🔒 **Certificate / SSL errors**: add `USE_SYSTEM_TRUSTSTORE=1` to `backend/.env` and restart the API
 

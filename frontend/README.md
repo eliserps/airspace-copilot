@@ -8,11 +8,11 @@ React 19 + TypeScript SPA. It only shows what the API returns; there is no logic
 
 Start the API first ([root README](../README.md#quick-start)), then, inside `frontend/`:
 
-**① Point to your local API**: create `.env.local` containing `VITE_API_BASE_URL=http://localhost:8000`
+**① Install packages** (first time only): `npm install`
 
-**② Install packages** (first time only): `npm install`
+**② Start**: `npm run dev`, then open http://localhost:8080
 
-**③ Start**: `npm run dev`, then open http://localhost:8080
+The API address defaults to `http://localhost:8000`. To change it, copy `.env.example` to `.env.local` and edit `VITE_API_BASE_URL`.
 
 **Other commands**
 

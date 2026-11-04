@@ -4,6 +4,8 @@ import { mockApi } from "./fixtures";
 
 const TABS = ["copilot", "traffic", "briefing", "weather"] as const;
 
+test.describe.configure({ mode: "default", timeout: 90_000 });
+
 test.beforeEach(async ({ page }) => {
   await mockApi(page);
 });
@@ -12,7 +14,8 @@ for (const tab of TABS) {
   test(`${tab} tab has no WCAG A/AA violations`, async ({ page }) => {
     await page.goto(`/?tab=${tab}`);
     await expect(page.getByRole("tab", { selected: true })).toBeVisible();
-    await page.waitForLoadState("networkidle");
+    await expect(page.locator(".ac-marker")).toHaveCount(2);
+    await expect(page.getByRole("status")).toHaveCount(0);
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])

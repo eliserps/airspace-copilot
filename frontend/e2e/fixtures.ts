@@ -38,6 +38,18 @@ export async function mockApi(page: Page) {
       },
     }),
   );
+  await page.route("http://api.test/briefing**", (route) =>
+    route.fulfill({
+      json: {
+        region: "south_america",
+        language: "en",
+        aircraft_count: 2,
+        briefing: "**2 aircraft** detected over South America. Coverage is partial.",
+        generated_at: 1_700_000_000,
+        source: "OpenSky (partial volunteer coverage)",
+      },
+    }),
+  );
   await page.route("http://api.test/ask/stream", (route) =>
     route.fulfill({
       headers: { "Content-Type": "text/event-stream" },
