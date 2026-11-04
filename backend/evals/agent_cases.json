@@ -1,0 +1,51 @@
+{
+  "description": "Does the copilot pick the right tool, with the right arguments, on its first turn?",
+  "cases": [
+    {
+      "id": "weather-airport-name-en",
+      "question": "Is the weather good for landing at Guarulhos?",
+      "expected": { "tool": "get_metar", "arguments": { "icao_code": "SBGR" } }
+    },
+    {
+      "id": "weather-airport-name-pt",
+      "question": "Como está o tempo para pouso em Porto Alegre?",
+      "expected": { "tool": "get_metar", "arguments": { "icao_code": "SBPA" } }
+    },
+    {
+      "id": "weather-icao-code",
+      "question": "What's the current METAR for KJFK?",
+      "expected": { "tool": "get_metar", "arguments": { "icao_code": "KJFK" } }
+    },
+    {
+      "id": "traffic-named-region-en",
+      "question": "How many planes are flying over Europe right now?",
+      "expected": { "tool": "count_aircraft", "arguments": { "region": "europe" } }
+    },
+    {
+      "id": "traffic-named-region-pt",
+      "question": "Quantos aviões estão sobre a Ásia agora?",
+      "expected": { "tool": "count_aircraft", "arguments": { "region": "asia" } }
+    },
+    {
+      "id": "traffic-here-uses-map-region",
+      "question": "How busy is it here?",
+      "region": "oceania",
+      "expected": { "tool": "count_aircraft", "arguments": { "region": "oceania" } }
+    },
+    {
+      "id": "traffic-whole-world",
+      "question": "How many aircraft are being tracked worldwide?",
+      "expected": { "tool": "count_aircraft", "arguments": { "region": "world" } }
+    },
+    {
+      "id": "no-tool-for-general-knowledge",
+      "question": "What does squawk 7700 mean?",
+      "expected": { "tool": null }
+    },
+    {
+      "id": "no-tool-for-off-topic",
+      "question": "Write me a poem about the sea.",
+      "expected": { "tool": null }
+    }
+  ]
+}
