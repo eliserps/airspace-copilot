@@ -1,0 +1,804 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "airspace-copilot API",
+    "description": "Live flight data and aviation weather, explained in natural language.",
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Health",
+        "description": "Liveness check; does not call upstream services.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "meta"
+        ],
+        "summary": "Ready",
+        "description": "Readiness check: the knowledge base is loaded and the AI model is configured.",
+        "operationId": "ready_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aircraft": {
+      "get": {
+        "tags": [
+          "airspace"
+        ],
+        "summary": "Aircraft Summary",
+        "description": "Aircraft currently detected over a region, as a text summary.",
+        "operationId": "aircraft_summary_aircraft_get",
+        "parameters": [
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "One of the regions from /health.",
+              "default": "south_america",
+              "title": "Region"
+            },
+            "description": "One of the regions from /health."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AircraftSummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aircraft/map": {
+      "get": {
+        "tags": [
+          "airspace"
+        ],
+        "summary": "Aircraft Map",
+        "description": "Aircraft over a region as objects with coordinates, for plotting pins.",
+        "operationId": "aircraft_map_aircraft_map_get",
+        "parameters": [
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "One of the regions from /health.",
+              "default": "south_america",
+              "title": "Region"
+            },
+            "description": "One of the regions from /health."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AircraftMapResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/briefing": {
+      "get": {
+        "tags": [
+          "airspace"
+        ],
+        "summary": "Briefing",
+        "description": "Natural-language briefing of current traffic over a region.",
+        "operationId": "briefing_briefing_get",
+        "parameters": [
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "One of the regions from /health.",
+              "default": "south_america",
+              "title": "Region"
+            },
+            "description": "One of the regions from /health."
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "en",
+                "pt"
+              ],
+              "type": "string",
+              "description": "'en' or 'pt'.",
+              "default": "en",
+              "title": "Lang"
+            },
+            "description": "'en' or 'pt'."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BriefingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/weather/{icao}": {
+      "get": {
+        "tags": [
+          "weather"
+        ],
+        "summary": "Weather",
+        "description": "Raw METAR plus a plain-language decoding for one airport.",
+        "operationId": "weather_weather__icao__get",
+        "parameters": [
+          {
+            "name": "icao",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9]{4}$",
+              "description": "4-character ICAO code, e.g. SBGR.",
+              "title": "Icao"
+            },
+            "description": "4-character ICAO code, e.g. SBGR."
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "en",
+                "pt"
+              ],
+              "type": "string",
+              "description": "'en' or 'pt'.",
+              "default": "en",
+              "title": "Lang"
+            },
+            "description": "'en' or 'pt'."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeatherResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ask": {
+      "post": {
+        "tags": [
+          "copilot"
+        ],
+        "summary": "Ask",
+        "description": "Answers a free-form question using the tool-calling agent.",
+        "operationId": "ask_ask_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AskResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ask/stream": {
+      "post": {
+        "tags": [
+          "copilot"
+        ],
+        "summary": "Ask Stream",
+        "description": "Same as /ask, streamed as Server-Sent Events: `meta`, `delta`..., then `done` or `error`.",
+        "operationId": "ask_stream_ask_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/event-stream": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Aircraft": {
+        "properties": {
+          "icao24": {
+            "type": "string",
+            "title": "Icao24",
+            "description": "ICAO 24-bit transponder address."
+          },
+          "callsign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Callsign",
+            "description": "Trimmed; null when not broadcast."
+          },
+          "country": {
+            "type": "string",
+            "title": "Country"
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude",
+            "description": "Decimal degrees."
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude",
+            "description": "Decimal degrees."
+          },
+          "altitude_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Altitude M",
+            "description": "Metres; barometric, falling back to geometric."
+          },
+          "on_ground": {
+            "type": "boolean",
+            "title": "On Ground"
+          },
+          "velocity_ms": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Velocity Ms",
+            "description": "Metres per second."
+          },
+          "heading_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heading Deg",
+            "description": "True track, 0-360."
+          }
+        },
+        "type": "object",
+        "required": [
+          "icao24",
+          "callsign",
+          "country",
+          "latitude",
+          "longitude",
+          "altitude_m",
+          "on_ground",
+          "velocity_ms",
+          "heading_deg"
+        ],
+        "title": "Aircraft"
+      },
+      "AircraftMapResponse": {
+        "properties": {
+          "region": {
+            "type": "string",
+            "title": "Region"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count",
+            "description": "Aircraft with a known position. Can be lower than /aircraft."
+          },
+          "bounds": {
+            "$ref": "#/components/schemas/Bounds",
+            "description": "Region bounding box, for the initial viewport."
+          },
+          "aircraft": {
+            "items": {
+              "$ref": "#/components/schemas/Aircraft"
+            },
+            "type": "array",
+            "title": "Aircraft"
+          },
+          "fetched_at": {
+            "type": "number",
+            "title": "Fetched At",
+            "description": "Unix time (seconds) of the OpenSky fetch."
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "description": "True when this is the last good result (at most 10 min old) because OpenSky is failing."
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "region",
+          "count",
+          "bounds",
+          "aircraft",
+          "fetched_at",
+          "stale",
+          "source"
+        ],
+        "title": "AircraftMapResponse"
+      },
+      "AircraftSummaryResponse": {
+        "properties": {
+          "region": {
+            "type": "string",
+            "title": "Region"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary",
+            "description": "Plain-text summary. For structured data use /aircraft/map."
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "region",
+          "summary",
+          "source"
+        ],
+        "title": "AircraftSummaryResponse"
+      },
+      "AskRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Question",
+            "description": "Natural-language question about traffic or weather.",
+            "examples": [
+              "Is the weather good for landing at Guarulhos?"
+            ]
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "south_america",
+                  "north_america",
+                  "europe",
+                  "africa",
+                  "asia",
+                  "oceania",
+                  "world"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region",
+            "description": "Map region the user is viewing, so \"how many planes here?\" resolves.",
+            "examples": [
+              "south_america"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "AskRequest"
+      },
+      "AskResponse": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question",
+            "description": "The question as the user typed it."
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer",
+            "description": "Markdown."
+          },
+          "flagged": {
+            "type": "boolean",
+            "title": "Flagged",
+            "description": "True when the input guardrails flagged a possible injection attempt.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "question",
+          "answer"
+        ],
+        "title": "AskResponse"
+      },
+      "Bounds": {
+        "properties": {
+          "lat_min": {
+            "type": "number",
+            "title": "Lat Min"
+          },
+          "lat_max": {
+            "type": "number",
+            "title": "Lat Max"
+          },
+          "lon_min": {
+            "type": "number",
+            "title": "Lon Min"
+          },
+          "lon_max": {
+            "type": "number",
+            "title": "Lon Max"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lat_min",
+          "lat_max",
+          "lon_min",
+          "lon_max"
+        ],
+        "title": "Bounds"
+      },
+      "BriefingResponse": {
+        "properties": {
+          "region": {
+            "type": "string",
+            "title": "Region"
+          },
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "aircraft_count": {
+            "type": "integer",
+            "title": "Aircraft Count",
+            "description": "Aircraft in the snapshot the briefing was written from."
+          },
+          "briefing": {
+            "type": "string",
+            "title": "Briefing",
+            "description": "Markdown."
+          },
+          "generated_at": {
+            "type": "number",
+            "title": "Generated At",
+            "description": "Unix time (seconds) the briefing was generated; may be cached."
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "region",
+          "language",
+          "aircraft_count",
+          "briefing",
+          "generated_at",
+          "source"
+        ],
+        "title": "BriefingResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "regions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Regions",
+            "description": "Valid values for the `region` parameter."
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Languages",
+            "description": "Valid values for the `lang` parameter."
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "regions",
+          "languages"
+        ],
+        "title": "HealthResponse"
+      },
+      "ReadinessResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "`ready`, or `starting` while a check is still failing."
+          },
+          "checks": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "type": "object",
+            "title": "Checks"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "checks"
+        ],
+        "title": "ReadinessResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WeatherResponse": {
+        "properties": {
+          "icao": {
+            "type": "string",
+            "title": "Icao"
+          },
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "raw": {
+            "type": "string",
+            "title": "Raw",
+            "description": "The unmodified METAR string."
+          },
+          "decoded": {
+            "type": "string",
+            "title": "Decoded",
+            "description": "Markdown."
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "icao",
+          "language",
+          "raw",
+          "decoded",
+          "source"
+        ],
+        "title": "WeatherResponse"
+      }
+    }
+  }
+}

@@ -9,9 +9,7 @@ lerna-debug.log*
 node_modules/
 dist
 dist-ssr
-.output/
 .tanstack/
-.nitro
 *.local
 
 .vscode/*
@@ -23,3 +21,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+/test-results/
+/playwright-report/
+/coverage/
