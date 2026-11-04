@@ -3,11 +3,11 @@
     <rect x="10" y="10" width="960" height="50" rx="10" fill="#475569"/>
     <text x="30" y="41" font-size="16" font-weight="700">Header</text>
     <text x="100" y="41" font-size="14" opacity="0.9">EN/PT · region · Live · Refresh</text>
-    <text x="950" y="41" font-size="13" text-anchor="end" font-family="Consolas, Menlo, monospace">routes/index.tsx</text>
+    <text x="950" y="41" font-size="13" text-anchor="end" font-family="Consolas, Menlo, monospace">components/header/</text>
 
     <rect x="10" y="70" width="600" height="340" rx="12" fill="#7c5cff"/>
     <text x="310" y="225" font-size="22" font-weight="700" text-anchor="middle">3D globe</text>
-    <text x="310" y="250" font-size="14" text-anchor="middle" font-family="Consolas, Menlo, monospace">GlobeView.tsx</text>
+    <text x="310" y="250" font-size="14" text-anchor="middle" font-family="Consolas, Menlo, monospace">components/globe/</text>
 
     <rect x="25" y="85" width="150" height="44" rx="8" fill="#ffffff" fill-opacity="0.2"/>
     <text x="100" y="112" font-size="13" text-anchor="middle">Aircraft count</text>
@@ -25,13 +25,13 @@
 
     <g font-size="15">
       <text x="645" y="165" font-weight="700">Copilot</text>
-      <text x="645" y="187" font-size="13" font-family="Consolas, Menlo, monospace" opacity="0.9">ChatPanel.tsx</text>
+      <text x="645" y="187" font-size="13" font-family="Consolas, Menlo, monospace" opacity="0.9">copilot/CopilotTab.tsx</text>
       <text x="645" y="235" font-weight="700">Traffic</text>
-      <text x="645" y="257" font-size="13" font-family="Consolas, Menlo, monospace" opacity="0.9">TrafficList.tsx</text>
+      <text x="645" y="257" font-size="13" font-family="Consolas, Menlo, monospace" opacity="0.9">traffic/TrafficTab.tsx</text>
       <text x="645" y="305" font-weight="700">Briefing</text>
-      <text x="645" y="327" font-size="13" font-family="Consolas, Menlo, monospace" opacity="0.9">BriefingPanel.tsx</text>
+      <text x="645" y="327" font-size="13" font-family="Consolas, Menlo, monospace" opacity="0.9">briefing/BriefingTab.tsx</text>
       <text x="645" y="375" font-weight="700">Weather</text>
-      <text x="645" y="397" font-size="13" font-family="Consolas, Menlo, monospace" opacity="0.9">WeatherCard.tsx</text>
+      <text x="645" y="397" font-size="13" font-family="Consolas, Menlo, monospace" opacity="0.9">weather/WeatherTab.tsx</text>
     </g>
     <g font-size="13" opacity="0.9" text-anchor="end">
       <text x="950" y="176">ask the AI</text>

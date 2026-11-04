@@ -1,0 +1,23 @@
+name: Bug report
+description: Something is broken or wrong
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: input
+    id: request-id
+    attributes:
+      label: Request ID
+      description: The `X-Request-ID` response header, if the problem involved an API call.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Globe, Copilot chat, Traffic list, Briefing, Weather, API, Other]
+    validations:
+      required: true

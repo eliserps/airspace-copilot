@@ -6,3 +6,7 @@ chroma_db/
 node_modules/
 .npmrc
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+*.egg-info/

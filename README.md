@@ -1,13 +1,17 @@
 # ✈️ airspace-copilot
 
-![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Groq](https://img.shields.io/badge/LLM-Groq-F55036)
+![License](https://img.shields.io/badge/license-MIT-green)
 
 An AI copilot that explains live air traffic and aviation weather in plain English or Portuguese.
 
-![React UI calls FastAPI over HTTP, FastAPI calls the core modules, the core modules call OpenSky, AWC and Groq](docs/architecture.svg)
+![Airspace Copilot: live aircraft over Europe on a 3D globe, and the copilot answering how many planes are flying there](docs/screenshot.png)
+
+![React UI calls the FastAPI routers over HTTP, routers call domain services, services call OpenSky, AWC and Groq](docs/architecture.svg)
 
 ## What it does
 
@@ -17,7 +21,7 @@ An AI copilot that explains live air traffic and aviation weather in plain Engli
 
 🌦️ **Weather decoding**: `SBGR 091800Z 19011G21KT 6000…` explained in plain words
 
-💬 **Copilot chat**: *"Is the weather good for landing in Guarulhos?"*
+💬 **Copilot chat**: *"Is the weather good for landing in Guarulhos?"*, streamed as it's written
 
 📊 **Evaluation**: the weather decoder scored against hand-checked answers
 
@@ -25,7 +29,7 @@ An AI copilot that explains live air traffic and aviation weather in plain Engli
 
 **What you need**
 
-🐍 **Python 3.11+** and 🟩 **Node.js 20+**
+🐍 **Python 3.12+**, ⚡ **[uv](https://docs.astral.sh/uv/)** and 🟩 **Node.js 22+**
 
 🔑 **Groq API key** (runs the AI): [console.groq.com](https://console.groq.com)
 
@@ -33,35 +37,31 @@ An AI copilot that explains live air traffic and aviation weather in plain Engli
 
 **Steps**
 
-**① Create a Python environment**: `python -m venv .venv`
+**① Add your keys**: create `backend/.env` with `GROQ_API_KEY`, `OPENSKY_CLIENT_ID` and `OPENSKY_CLIENT_SECRET`
 
-**② Activate it**: `.venv\Scripts\Activate.ps1` (macOS/Linux: `source .venv/bin/activate`)
+**② Point the UI to your API**: create `frontend/.env.local` containing `VITE_API_BASE_URL=http://localhost:8000`
 
-**③ Install packages**: `pip install -r requirements.txt`
+**③ Terminal 1, start the API**: `cd backend`, then `uv sync`, then `uv run uvicorn app.main:app --reload --port 8000`
 
-**④ Add your keys**: create `.env` in the project root with `GROQ_API_KEY`, `OPENSKY_CLIENT_ID` and `OPENSKY_CLIENT_SECRET`
+🧰 **Prefer pip?** Create and activate a venv (`python -m venv .venv`, then `.venv\Scripts\Activate.ps1`; macOS/Linux: `source .venv/bin/activate`), then `cd backend`, `pip install -e . --group dev` (pip 25.1+) and `uvicorn app.main:app --reload --port 8000`
 
-**⑤ Point the UI to your API**: create `frontend/.env.local` containing `VITE_API_BASE_URL=http://localhost:8000`
+**④ Terminal 2, start the UI**: `cd frontend`, then `npm install`, then `npm run dev`
 
-**⑥ Terminal 1, start the API**: `uvicorn api.main:app --reload --port 8000`
-
-**⑦ Terminal 2, start the UI**: `cd frontend`, then `npm install`, then `npm run dev`
-
-**⑧ Open** http://localhost:8080 🎉
+**⑤ Open** http://localhost:8080 🎉
 
 ## Optional settings
 
-Add any of these to `.env`:
+Add any of these to `backend/.env`:
 
 🤖 `LLM_MODEL`: Groq model, default `openai/gpt-oss-120b`
 
-🌐 `CORS_ORIGINS`: sites allowed to call the API, default `http://localhost:8080`
+🌐 `CORS_ORIGINS`: sites allowed to call the API, comma-separated, default `http://localhost:8080`
 
 💬 `ASK_RATE_LIMIT_PER_MINUTE`: chat questions per user per minute, default `10`
 
 🌦️ `WEATHER_RATE_LIMIT_PER_MINUTE`: weather lookups per user per minute, default `20`
 
-🧵 `WORKER_THREADS`: API worker threads, default `100`
+🪵 `LOG_LEVEL` / `LOG_FORMAT`: default `INFO` / `text`; use `json` in production
 
 🏢 `USE_SYSTEM_TRUSTSTORE`: set to `1` on corporate networks with certificate errors
 
@@ -69,25 +69,23 @@ Add any of these to `.env`:
 
 😶 **Page loads but shows no data**: check that terminal 1 (the API) is still running
 
-🔀 **Page shows data, but not from your API**: check that `frontend/.env.local` exists (step ⑤)
+🔀 **Page shows data, but not from your API**: check that `frontend/.env.local` exists (step ②)
 
-🔒 **Certificate / SSL errors**: add `USE_SYSTEM_TRUSTSTORE=1` to `.env` and restart the API
+🔒 **Certificate / SSL errors**: add `USE_SYSTEM_TRUSTSTORE=1` to `backend/.env` and restart the API
 
 ⏳ **`429 llm_rate_limited`**: the Groq quota ran out, so wait a minute
 
+🔎 **Tracing a request**: every response has an `X-Request-ID` header, and the same ID appears in the API logs
+
+🤝 **Contributing**: see [CONTRIBUTING.md](CONTRIBUTING.md) · 📜 **Changes**: see [CHANGELOG.md](CHANGELOG.md)
+
 ## Project map
 
-🧠 **`src/`**: all the logic: data clients, AI calls, RAG, agent, guardrails
+🧠 **`backend/`**: FastAPI app organised by domain. See [backend/README.md](backend/README.md)
 
-🔌 **`api/`**: FastAPI endpoints. See [api/README.md](api/README.md)
+🖥️ **`frontend/`**: React SPA organised by feature. See [frontend/README.md](frontend/README.md)
 
-🖥️ **`frontend/`**: React web app. See [frontend/README.md](frontend/README.md)
-
-📊 **`evals/`**: weather decoder evaluation
-
-📚 **`knowledge/`**: weather reference docs the AI reads
-
-🧪 **`tests/`**: backend tests (no network, no tokens)
+📐 **`docs/adr/`**: why things are the way they are. See [the decision log](docs/adr/README.md)
 
 ## How the copilot answers
 
@@ -95,11 +93,15 @@ Add any of these to `.env`:
 
 🔒 **Only 2 read-only tools**: the AI can't do anything beyond reading data
 
+🧾 **Tool schemas come from Pydantic models**: arguments are validated before anything runs
+
 🔁 **Max 5 rounds**: no endless loops
 
 ♻️ **Repeated call forces an answer**: the AI never fetches the same data twice
 
-🛡️ **Guardrails flag manipulation**: suspicious questions are logged and answered safely
+🛡️ **Guardrails flag manipulation**: suspicious questions are logged and answered safely ([why that's enough](docs/adr/0007-guardrails.md))
+
+⚡ **Answers stream token by token** over Server-Sent Events ([ADR 0005](docs/adr/0005-streaming-answers.md))
 
 ## Saving AI tokens
 
@@ -111,7 +113,7 @@ Add any of these to `.env`:
 
 ⏱️ **Flight data is cached for 30 s**, so all users share one OpenSky call
 
-Every AI call logs its cost, e.g. `[llm] briefing: prompt=412 completion=180`.
+Every AI call logs its cost, e.g. `tokens briefing: prompt=412 completion=180 total=592`.
 
 ## Evaluation
 
@@ -123,7 +125,23 @@ The weather decoder is compared field by field with answers checked by hand agai
 
 ⚠️ **Open issues**: sometimes explains codes missing from the docs (`VCTS`), and sometimes refuses documented ones (`FEW025`)
 
-Run it with `python evals/evaluate.py --repeat 3`. It spends Groq tokens.
+Run it from `backend/` with `uv run python -m evals.evaluate --repeat 3`. It spends Groq tokens.
+
+🧭 **Agent tool selection**: `uv run python -m evals.agent_eval --repeat 3` checks that the copilot picks the right tool and arguments for questions in English and Portuguese ([cases](backend/evals/agent_cases.json))
+
+## Quality checks
+
+🧪 **Backend**: 95+ tests with fakes for every external service, 95% coverage, `mypy --strict`, ruff
+
+🧪 **Frontend**: Vitest + Testing Library + MSW, Playwright end-to-end, strict TypeScript
+
+♿ **Accessibility**: every tab is audited with axe (WCAG 2.1 A/AA) in the end-to-end tests
+
+🔐 **Dependencies**: check with `uv run --with pip-audit pip-audit --skip-editable` and `npm audit`
+
+📜 **Contract**: the frontend's API types are generated from the backend's OpenAPI, so a breaking change is a type error
+
+▶️ `make check` runs lint, types and tests for both sides (or see the commands in each README)
 
 ## Known limitations
 
@@ -131,14 +149,4 @@ Run it with `python evals/evaluate.py --repeat 3`. It spends Groq tokens.
 
 🤖 **The AI can still make mistakes**: RAG reduces errors but doesn't remove them
 
-🛡️ **Guardrails only apply through the API**: the terminal demo calls the agent directly
-
-## Commands
-
-🖥️ `python -m src.main`: terminal demo of every feature
-
-🧪 `pip install pytest && pytest`: backend tests
-
-📊 `python evals/evaluate.py --repeat 3`: decoder evaluation (spends tokens)
-
-📚 `python -m src.rag`: rebuild the knowledge index after editing `knowledge/`
+🧮 **Single process**: caches and rate limits live in memory, so scaling out needs a shared store ([ADR 0002](docs/adr/0002-async-and-injected-clients.md))
