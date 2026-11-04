@@ -1,10 +1,3 @@
-"""Shared Pydantic models for request and response bodies.
-
-These document the contract in one place and make the shapes visible in /docs and
-openapi.json, which is what the frontend integrates against. They describe what the
-existing src/ functions already return -- they do not reshape anything.
-"""
-
 from pydantic import BaseModel, Field, field_validator
 
 from src.config import LANGUAGE_NAMES
@@ -48,14 +41,11 @@ class BriefingResponse(BaseModel):
     region: str
     language: str
     aircraft_count: int = Field(
-        description="Real count from OpenSky, not parsed from the text: the "
-                    "count of the snapshot the briefing was written from, so "
-                    "it agrees with the numbers in the text."
+        description="Aircraft in the snapshot the briefing was written from."
     )
     briefing: str = Field(description="Markdown.")
     generated_at: float = Field(
-        description="Unix time (seconds) the briefing text was generated. A "
-                    "cached briefing can be a few minutes older than the request."
+        description="Unix time (seconds) the briefing was generated; may be cached."
     )
     source: str
 
@@ -85,14 +75,14 @@ class Bounds(BaseModel):
 
 
 class Aircraft(BaseModel):
-    icao24: str = Field(description="Unique transponder address. Use as list key.")
+    icao24: str = Field(description="ICAO 24-bit transponder address.")
     callsign: str | None = Field(description="Trimmed; null when not broadcast.")
     country: str
-    latitude: float = Field(description="Decimal degrees. Never null.")
-    longitude: float = Field(description="Decimal degrees. Never null.")
-    altitude_m: float | None = Field(description="METRES. Barometric, geometric fallback.")
+    latitude: float = Field(description="Decimal degrees.")
+    longitude: float = Field(description="Decimal degrees.")
+    altitude_m: float | None = Field(description="Metres; barometric, falling back to geometric.")
     on_ground: bool
-    velocity_ms: float | None = Field(description="METRES PER SECOND.")
+    velocity_ms: float | None = Field(description="Metres per second.")
     heading_deg: float | None = Field(description="True track, 0-360.")
 
 
@@ -105,19 +95,17 @@ class AircraftMapResponse(BaseModel):
     aircraft: list[Aircraft]
     fetched_at: float = Field(description="Unix time (seconds) of the OpenSky fetch.")
     stale: bool = Field(
-        description="True when OpenSky is failing and this is the last good "
-                    "result (at most 10 minutes old) instead of live data."
+        description="True when this is the last good result (at most 10 min old) "
+                    "because OpenSky is failing."
     )
     source: str
 
 
 class AskResponse(BaseModel):
-    question: str = Field(description="Echoes what the user typed, before guardrails.")
+    question: str = Field(description="The question as the user typed it.")
     answer: str = Field(description="Markdown.")
     flagged: bool = Field(
         default=False,
-        description="True when input guardrails detected a possible injection "
-                    "attempt. The question was still answered, with the text "
-                    "fenced as untrusted data.",
+        description="True when the input guardrails flagged a possible injection attempt.",
     )
 

@@ -1,10 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ClientOnly } from "@tanstack/react-router";
+import { ClientOnly, createFileRoute } from "@tanstack/react-router";
 import { Suspense, lazy, useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import {
-  Radar,
   RefreshCw,
   Radio,
   MessageSquare,
@@ -12,6 +10,7 @@ import {
   CloudSun,
   Plane,
   TriangleAlert,
+  type LucideIcon,
 } from "lucide-react";
 import { REGIONS, DEFAULT_REGION, MAX_GLOBE_MARKERS, type Region } from "@/config";
 import { sampleSpread } from "@/lib/markers";
@@ -30,30 +29,12 @@ import { cn } from "@/lib/utils";
 const GlobeView = lazy(() => import("@/components/GlobeView"));
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Airspace Copilot" },
-      {
-        name: "description",
-        content:
-          "Track live aircraft on a 3D globe, ask a copilot about traffic, and read regional briefings and decoded METAR weather.",
-      },
-      { property: "og:title", content: "Airspace Copilot" },
-      {
-        property: "og:description",
-        content:
-          "A 3D globe with live aircraft markers, a copilot chat, regional briefings in EN/PT-BR, and decoded METAR weather.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
   component: Index,
 });
 
 type TabId = "copilot" | "traffic" | "briefing" | "weather";
 
-const TABS: Array<{ id: TabId; labelKey: StringKey; icon: typeof Radar; tone: string }> = [
+const TABS: Array<{ id: TabId; labelKey: StringKey; icon: LucideIcon; tone: string }> = [
   { id: "copilot", labelKey: "tab.copilot", icon: MessageSquare, tone: "text-violet" },
   { id: "traffic", labelKey: "tab.traffic", icon: Plane, tone: "text-orange" },
   { id: "briefing", labelKey: "tab.briefing", icon: FileText, tone: "text-yellow" },

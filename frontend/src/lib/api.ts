@@ -60,13 +60,11 @@ type ApiErrorBody = {
 
 export class ApiError extends Error {
   status?: number | undefined;
-  code?: string | undefined;
 
-  constructor(message: string, status?: number, code?: string) {
+  constructor(message: string, status?: number) {
     super(message);
     this.name = "ApiError";
     this.status = status;
-    this.code = code;
   }
 }
 
@@ -93,7 +91,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(
       body?.message || `Request failed (${res.status} ${res.statusText || "error"})`,
       res.status,
-      body?.error,
     );
   }
 
@@ -104,9 +101,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 }
 
-export type Lang = "en" | "pt";
-
-export function toApiLang(lang: string): Lang {
+function toApiLang(lang: string): "en" | "pt" {
   return lang.toLowerCase().startsWith("pt") ? "pt" : "en";
 }
 

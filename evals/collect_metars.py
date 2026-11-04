@@ -1,10 +1,8 @@
-"""Collects real METARs and appends them to the golden dataset as UNVALIDATED cases.
+"""Appends real METARs to the golden dataset as unvalidated cases.
 
-The `expected` fields are left null on purpose. They must be filled in by hand
-against the METAR specification -- never by a model. A dataset validated by the
-system it grades inherits that system's errors and then certifies them as correct.
+Fill `expected` by hand against the METAR spec, then set validated=true.
 
-Usage:  python evals/collect_metars.py
+Usage: python evals/collect_metars.py
 """
 
 import json

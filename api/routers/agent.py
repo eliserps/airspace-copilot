@@ -1,10 +1,3 @@
-"""Agent endpoint. Calls check_question() then run_agent(), both from src/.
-
-The guardrail logic lives in src/guardrails.py. This router only translates its
-result into HTTP: rejection into 422, and a flagged-but-allowed question into the
-`flagged` field on the response.
-"""
-
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException

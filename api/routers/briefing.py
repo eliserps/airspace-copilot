@@ -1,5 +1,3 @@
-"""Airspace briefing endpoint. Calls generate_briefing_with_meta() from src/."""
-
 from fastapi import APIRouter, Query
 
 from src.briefing import generate_briefing_with_meta

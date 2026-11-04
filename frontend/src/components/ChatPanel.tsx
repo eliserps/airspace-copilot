@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
-import { ShieldAlert, Send, Sparkles } from "lucide-react";
+import { Radar, ShieldAlert, Send } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
 import { Markdown } from "@/components/Markdown";
 import { LoadingState, ErrorState } from "@/components/StatePanels";
@@ -58,7 +58,7 @@ export function ChatPanel({ regionId, regionLabel }: { regionId: string; regionL
         {messages.length === 0 && !ask.isPending ? (
           <div className="flex flex-col items-start gap-3 py-6">
             <div className="flex items-center gap-2 text-primary">
-              <Sparkles className="size-4" />
+              <Radar className="size-4" />
               <p className="label-caps text-primary">{t("copilot.standingBy")}</p>
             </div>
             <p className="text-sm text-muted-foreground">

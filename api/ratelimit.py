@@ -1,16 +1,7 @@
-"""Per-client rate limiting for endpoints that spend LLM tokens.
+"""In-memory per-client rate limiting for endpoints that spend LLM tokens.
 
-A sliding window held in memory: like the other caches it resets on restart and
-is not shared between processes, which is acceptable for a single instance. It
-bounds what one client can spend; it is not a defence against a distributed
-attack -- the provider-side quota is the backstop for that.
-
-Behind a reverse proxy (Render, Fly, nginx) every request arrives from the
-proxy's address, so WITHOUT --proxy-headers all users share one bucket. Run
-uvicorn with --proxy-headers and set --forwarded-allow-ips to the proxy's
-address. "*" is only safe when the app port is reachable solely through the
-proxy: otherwise any client can send its own X-Forwarded-For and pick a fresh
-bucket on every request.
+Behind a reverse proxy, run uvicorn with --proxy-headers and --forwarded-allow-ips
+set to the proxy address, otherwise every client shares one bucket.
 """
 
 import threading

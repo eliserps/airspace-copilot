@@ -54,12 +54,12 @@ Rules for the values:
 
 
 def _retrieve(metar: str, n_results: int = 8) -> tuple[str, list[dict]]:
-   """Fetches reference chunks for a METAR and formats them as prompt context."""
-   chunks = search(metar, n_results=n_results)
-   context = "\n\n---\n\n".join(
-       f"[source: {c['source']}]\n{c['text']}" for c in chunks
-   )
-   return context, chunks
+    """Fetches reference chunks for a METAR and formats them as prompt context."""
+    chunks = search(metar, n_results=n_results)
+    context = "\n\n---\n\n".join(
+        f"[source: {c['source']}]\n{c['text']}" for c in chunks
+    )
+    return context, chunks
 
 
 _DECODED_CACHE_MAX = 256
@@ -67,19 +67,19 @@ _decoded_cache: dict[tuple[str, str], str] = {}
 
 
 def decode_metar(metar: str | None, language: str = "en") -> str:
-   """Decodes a raw METAR into plain language, grounded in the reference docs."""
-   if not metar or not metar.strip():
-       return "No METAR available for this airport right now."
+    """Decodes a raw METAR into plain language, grounded in the reference docs."""
+    if not metar or not metar.strip():
+        return "No METAR available for this airport right now."
 
-   key = (metar.strip(), language)
-   if key in _decoded_cache:
-       return _decoded_cache[key]
+    key = (metar.strip(), language)
+    if key in _decoded_cache:
+        return _decoded_cache[key]
 
-   context, _ = _retrieve(metar)
+    context, _ = _retrieve(metar)
 
-   language_name = LANGUAGE_NAMES[language]
+    language_name = LANGUAGE_NAMES[language]
 
-   prompt = f"""Reference documentation:
+    prompt = f"""Reference documentation:
 
 {context}
 
@@ -91,31 +91,24 @@ Decode this METAR in {language_name}:
 
 Explain each element, then give a one-line operational summary."""
 
-   decoded = ask(prompt, system_prompt=SYSTEM_PROMPT, label="metar")
+    decoded = ask(prompt, system_prompt=SYSTEM_PROMPT, label="metar")
 
-   if decoded and decoded.strip():
-       if len(_decoded_cache) >= _DECODED_CACHE_MAX:
-           _decoded_cache.clear()
-       _decoded_cache[key] = decoded
-   return decoded
+    if decoded and decoded.strip():
+        if len(_decoded_cache) >= _DECODED_CACHE_MAX:
+            _decoded_cache.clear()
+        _decoded_cache[key] = decoded
+    return decoded
 
 
 def decode_metar_structured(metar: str | None) -> dict:
-   """Decodes a METAR into structured fields for field-by-field evaluation.
+    """Decodes a METAR into the fields scored by evals/evaluate.py."""
+    if not metar or not metar.strip():
+        return {"_error": "empty METAR", "_retrieved_sources": []}
 
-   Returns a dict with the contract keys plus:
-     "_retrieved_sources": which chunks RAG returned, so a wrong answer can be
-       traced to retrieval (the chunk never arrived) or faithfulness (it arrived
-       and was ignored) -- different bugs with different fixes.
-     "_error": set when the model returned something that is not valid JSON.
-   """
-   if not metar or not metar.strip():
-       return {"_error": "empty METAR", "_retrieved_sources": []}
+    context, chunks = _retrieve(metar)
+    sources = [c["source"] for c in chunks]
 
-   context, chunks = _retrieve(metar)
-   sources = [c["source"] for c in chunks]
-
-   prompt = f"""Reference documentation:
+    prompt = f"""Reference documentation:
 
 {context}
 
@@ -127,13 +120,13 @@ Decode this METAR:
 
 {STRUCTURED_SCHEMA}"""
 
-   raw = ask(prompt, system_prompt=STRUCTURED_SYSTEM_PROMPT, json_mode=True)
+    raw = ask(prompt, system_prompt=STRUCTURED_SYSTEM_PROMPT, json_mode=True)
 
-   try:
-       decoded = json.loads(raw)
-   except json.JSONDecodeError as error:
-       return {"_error": f"invalid JSON: {error}", "_raw": raw,
-               "_retrieved_sources": sources}
+    try:
+        decoded = json.loads(raw)
+    except json.JSONDecodeError as error:
+        return {"_error": f"invalid JSON: {error}", "_raw": raw,
+                "_retrieved_sources": sources}
 
-   decoded["_retrieved_sources"] = sources
-   return decoded
+    decoded["_retrieved_sources"] = sources
+    return decoded

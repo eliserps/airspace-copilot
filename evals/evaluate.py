@@ -1,17 +1,9 @@
-"""Deterministic field-by-field evaluation of the METAR decoder.
-
-Runs decode_metar_structured() on every VALIDATED case in the golden dataset and
-compares each field against the hand-checked expected value. No model grades
-anything here -- comparison is exact equality against ground truth taken from the
-METAR specification. That is what makes this pass trustworthy: it cannot inherit
-the decoder's mistakes.
+"""Field-by-field evaluation of the METAR decoder against the golden dataset.
 
 Usage:
-  python evals/evaluate.py            # score all validated cases
-  python evals/evaluate.py --case ID  # score one case
-  python evals/evaluate.py --repeat 3 # run each case N times (the decoder is
-                                      # non-deterministic; a single green run is
-                                      # weak evidence)
+  python evals/evaluate.py
+  python evals/evaluate.py --case ID
+  python evals/evaluate.py --repeat 3
 """
 
 import argparse
@@ -49,12 +41,7 @@ SCORED_FIELDS = [
 
 
 def normalise(field: str, value):
-    """Makes trivially-equivalent representations compare equal.
-
-    Deliberately narrow. It fixes formatting noise (a float 700.0 vs int 700),
-    never semantics: null stays distinct from 0, and "700 feet" is not coerced
-    into 700 because a decoder emitting that is failing the contract.
-    """
+    """Normalises formatting noise (700.0 vs 700) without changing meaning."""
     if value is None:
         return None
     if field == "station" and isinstance(value, str):
@@ -82,13 +69,7 @@ def normalise(field: str, value):
 
 
 def check_refusal(expected: dict, actual: dict) -> tuple[bool, str]:
-    """Scores whether the decoder refused undocumented codes when it should.
-
-    A refusal case passes only if every code the gold answer marks undecodable is
-    actually listed. Explaining an undocumented code is a failure EVEN IF the
-    explanation is meteorologically correct -- the system prompt says "never
-    guess", so an accurate guess still breaks the rule.
-    """
+    """Passes only if every code the gold answer marks undecodable is listed."""
     should_refuse = bool(expected.get("expected_refusal"))
     listed = {str(c).strip().upper() for c in (actual.get("undecodable_codes") or [])}
 
@@ -136,13 +117,7 @@ def evaluate_case(case: dict) -> dict:
 
 
 def load_validated_cases(dataset: dict, case_id: str | None) -> list[dict]:
-    """Returns cases eligible for scoring.
-
-    A case counts only when its expected values were checked by hand. Synthetic
-    cases were validated when written; collected ones carry validated=false until
-    a human fills them in. Scoring an unvalidated case would compare the decoder
-    against a row of nulls and report a meaningless number.
-    """
+    """Returns the hand-validated cases."""
     cases = []
     for case in dataset["cases"]:
         if case_id and case["id"] != case_id:

@@ -1,5 +1,3 @@
-"""METAR endpoint. Calls fetch_metar() and decode_metar() from src/."""
-
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from src.decoder import decode_metar

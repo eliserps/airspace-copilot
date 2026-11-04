@@ -1,5 +1,5 @@
-export const metersToFeet = (m: number) => m * 3.280839895;
-export const msToKnots = (ms: number) => ms * 1.943844492;
+const metersToFeet = (m: number) => m * 3.280839895;
+const msToKnots = (ms: number) => ms * 1.943844492;
 
 const nf = (v: number, locale?: string) =>
   Math.round(v).toLocaleString(locale === "pt" ? "pt-BR" : "en-US");

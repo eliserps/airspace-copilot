@@ -1,16 +1,3 @@
-"""REST API for airspace-copilot.
-
-A THIN wrapper over src/. Every endpoint calls an existing function and shapes the
-result as JSON. No decoding, no agent logic, no bounding boxes, no guardrail rules
-live here -- if a rule about aviation or the LLM is needed, it belongs in src/.
-
-This file does app creation, CORS and router registration ONLY. Allowed origins
-come from CORS_ORIGINS in .env (see src/config.py). Endpoints live in
-api/routers/, grouped by domain.
-
-Run:  uvicorn api.main:app --reload --port 8000
-"""
-
 import logging
 import threading
 from contextlib import asynccontextmanager
@@ -69,5 +56,5 @@ app.include_router(agent.router)
 
 @app.get("/health", tags=["meta"], response_model=HealthResponse)
 async def health():
-    """Liveness check. Does not touch upstream services, so it stays fast."""
+    """Liveness check; does not call upstream services."""
     return {"status": "ok", "regions": sorted(REGIONS), "languages": list(LANGUAGES)}

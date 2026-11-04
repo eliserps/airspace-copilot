@@ -1,5 +1,3 @@
-"""Live traffic endpoints. Call count_aircraft() and get_region_snapshot() from src/."""
-
 from fastapi import APIRouter, Query
 
 from src.tools import (

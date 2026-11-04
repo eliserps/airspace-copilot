@@ -1,15 +1,3 @@
-"""The shared flat error shape, and the exception handlers that enforce it.
-
-Every failure the API returns looks the same:
-
-    {"error": "<stable_slug>", "message": "<human readable>", ...context}
-
-`error` is a machine-readable slug the frontend branches on; `message` is for
-humans. FastAPI nests errors under `detail` by default, which would give clients
-two different shapes depending on whether the error came from us or from
-validation. These handlers flatten that to one.
-"""
-
 import logging
 
 import groq
@@ -28,11 +16,6 @@ log = logging.getLogger("airspace.errors")
 
 
 def error_detail(error: str, message: str, **context) -> dict:
-    """Builds the body for an HTTPException detail.
-
-    Keeping the shape in one function means a new endpoint cannot accidentally
-    invent a different error format.
-    """
     return {"error": error, "message": message, **context}
 
 
@@ -99,11 +82,6 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(requests.RequestException)
     async def upstream_error_handler(request, exc: requests.RequestException):
-        """Upstream network failure becomes 503, never a 500 stack trace.
-
-        OpenSky auth and state fetches call raise_for_status(), so they raise
-        rather than returning None. Without this the client gets an opaque 500.
-        """
         return JSONResponse(
             status_code=503,
             content={"error": "upstream_unavailable",
@@ -132,11 +110,6 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(groq.RateLimitError)
     async def llm_rate_limited_handler(request, exc: groq.RateLimitError):
-        """The language model's token/request quota ran out -- 429, not 500.
-
-        The Groq SDK uses httpx, so these never reach the requests handlers
-        above; without their own handlers they surface as opaque 500s.
-        """
         log.warning("LLM rate limited: %s", exc)
         return JSONResponse(
             status_code=429,
@@ -147,11 +120,6 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(groq.APIError)
     async def llm_error_handler(request, exc: groq.APIError):
-        """Any other model failure (timeout, outage, bad key) becomes 503.
-
-        Logged at error level: an AuthenticationError here means GROQ_API_KEY
-        is wrong, which only the operator can fix.
-        """
         log.error("LLM call failed: %s: %s", type(exc).__name__, exc)
         return JSONResponse(
             status_code=503,

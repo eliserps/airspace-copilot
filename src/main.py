@@ -14,9 +14,9 @@ print(f"{len(aircraft)} aircraft detected\n")
 
 print("--- DECODED WEATHER ---")
 for airport in AIRPORTS:
-   metar = get_metar(airport)
-   print(f"\n[{airport}] raw: {metar!r}")
-   print(decode_metar(metar, language=LANGUAGE))
+    metar = get_metar(airport)
+    print(f"\n[{airport}] raw: {metar!r}")
+    print(decode_metar(metar, language=LANGUAGE))
 
 print(f"\n--- BRIEFING ({LANGUAGE.upper()}) ---")
 print(generate_briefing(aircraft, REGION, LANGUAGE))
