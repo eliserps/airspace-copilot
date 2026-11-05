@@ -41,7 +41,7 @@ export function GlobePanel({
       aria-label={t("app.aircraft")}
       className="panel relative h-[52vh] min-h-[320px] overflow-hidden lg:h-auto lg:min-h-[560px] lg:flex-1"
     >
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 isolate">
         <PanelBoundary>
           <ClientOnly fallback={<LoadingState label={t("state.globe")} />}>
             <Suspense fallback={<LoadingState label={t("state.globe")} />}>
