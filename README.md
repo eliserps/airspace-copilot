@@ -9,7 +9,7 @@
 
 An AI copilot that explains live air traffic and aviation weather in plain English or Portuguese.
 
-![Airspace Copilot: live aircraft over Europe on a 3D globe, and the copilot answering how many planes are flying there](docs/screenshot.png)
+![Airspace Copilot: live aircraft over Europe on a 3D globe, the copilot streaming an answer, and the details of a selected aircraft](docs/demo.gif)
 
 ![React UI calls the FastAPI routers over HTTP, routers call domain services, services call OpenSky, AWC and Groq](docs/architecture.svg)
 
