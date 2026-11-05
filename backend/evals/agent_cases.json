@@ -38,6 +38,22 @@
       "expected": { "tool": "count_aircraft", "arguments": { "region": "world" } }
     },
     {
+      "id": "traffic-city-pt",
+      "question": "Quantos voos tem em São Paulo agora?",
+      "expected": {
+        "tool": "count_aircraft_near",
+        "near": { "latitude": -23.55, "longitude": -46.63, "within_km": 40 }
+      }
+    },
+    {
+      "id": "traffic-city-en",
+      "question": "How many planes are near London right now?",
+      "expected": {
+        "tool": "count_aircraft_near",
+        "near": { "latitude": 51.51, "longitude": -0.13, "within_km": 40 }
+      }
+    },
+    {
       "id": "no-tool-for-general-knowledge",
       "question": "What does squawk 7700 mean?",
       "expected": { "tool": null }

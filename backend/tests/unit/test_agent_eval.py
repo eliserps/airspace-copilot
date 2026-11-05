@@ -16,3 +16,15 @@ def test_wrong_tool_or_argument_fails() -> None:
 def test_no_tool_expected() -> None:
     assert score({"tool": None}, [])[0]
     assert not score({"tool": None}, [("count_aircraft", {"region": "world"})])[0]
+
+
+def test_near_expectation_accepts_nearby_coordinates_only() -> None:
+    expected = {
+        "tool": "count_aircraft_near",
+        "near": {"latitude": -23.55, "longitude": -46.63, "within_km": 40},
+    }
+    nearby = {"place": "São Paulo", "latitude": -23.5, "longitude": -46.6}
+    far = {"place": "Rio", "latitude": -22.9, "longitude": -43.2}
+    assert score(expected, [("count_aircraft_near", nearby)])[0]
+    assert not score(expected, [("count_aircraft_near", far)])[0]
+    assert not score(expected, [("count_aircraft_near", {"place": "São Paulo"})])[0]

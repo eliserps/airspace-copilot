@@ -6,6 +6,7 @@ import httpx
 from app.core.cache import Clock, TimedCache
 from app.core.metrics import CACHE_LOOKUPS, UPSTREAM_ERRORS
 
+from .geo import distance_km
 from .models import Snapshot, StateVector
 from .opensky import AircraftSource
 from .regions import REGIONS, RegionId, resolve_region
@@ -16,6 +17,7 @@ FAILURE_BACKOFF_SECONDS = 15
 RATE_LIMIT_BACKOFF_SECONDS = 60
 RATE_LIMIT_BACKOFF_MAX_SECONDS = 3600
 WORLD: RegionId = "world"
+LISTED_AIRCRAFT = 5
 
 
 def backoff_seconds(error: Exception) -> float:
@@ -79,21 +81,49 @@ class TrafficService:
     async def describe(self, region: str) -> str:
         key = resolve_region(region)
         snapshot = await self.snapshot(key)
-        note = ""
-        if snapshot.stale:
-            age = round(self.clock() - snapshot.fetched_at)
-            note = f" (data from {age} s ago; the live feed is temporarily unavailable)"
+        note = self._stale_note(snapshot)
 
         if not snapshot.aircraft:
             return f"No aircraft detected over {key} right now{note}."
         lines = [f"{len(snapshot.aircraft)} aircraft detected over {key}{note}."]
-        for plane in snapshot.aircraft[:5]:
-            altitude = plane.altitude
-            if plane.on_ground:
-                where = "on ground"
-            elif altitude is None:
-                where = "altitude unknown"
-            else:
-                where = f"at {altitude:.0f} m"
-            lines.append(f"- {plane.callsign or 'unknown'} {where}")
+        for plane in snapshot.aircraft[:LISTED_AIRCRAFT]:
+            lines.append(f"- {plane.callsign or 'unknown'} {_where(plane)}")
         return "\n".join(lines)
+
+    async def describe_near(
+        self, place: str, latitude: float, longitude: float, radius_km: float
+    ) -> str:
+        world = await self._world()
+        note = self._stale_note(world)
+        distances = [
+            (distance_km(latitude, longitude, p.latitude, p.longitude), p)
+            for p in world.aircraft
+            if p.latitude is not None and p.longitude is not None
+        ]
+        nearby = sorted(((d, p) for d, p in distances if d <= radius_km), key=lambda i: i[0])
+        within = f"within {radius_km:.0f} km of {place} ({latitude:.2f}, {longitude:.2f})"
+
+        if not nearby:
+            return f"No aircraft detected {within} right now{note}."
+        on_ground = sum(1 for _, p in nearby if p.on_ground)
+        lines = [
+            f"{len(nearby)} aircraft detected {within}{note}: "
+            f"{len(nearby) - on_ground} airborne, {on_ground} on ground. Closest:"
+        ]
+        for distance, plane in nearby[:LISTED_AIRCRAFT]:
+            lines.append(f"- {plane.callsign or 'unknown'} {distance:.0f} km away, {_where(plane)}")
+        return "\n".join(lines)
+
+    def _stale_note(self, snapshot: Snapshot) -> str:
+        if not snapshot.stale:
+            return ""
+        age = round(self.clock() - snapshot.fetched_at)
+        return f" (data from {age} s ago; the live feed is temporarily unavailable)"
+
+
+def _where(plane: StateVector) -> str:
+    if plane.on_ground:
+        return "on ground"
+    if plane.altitude is None:
+        return "altitude unknown"
+    return f"at {plane.altitude:.0f} m"

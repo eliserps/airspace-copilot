@@ -143,3 +143,28 @@ async def test_one_world_fetch_serves_every_region(
     assert len(world.aircraft) == 3
     assert source.calls == 1
     assert source.boxes == [REGIONS["world"]]
+
+
+async def test_describe_near_lists_closest_aircraft_within_the_radius(
+    traffic: TrafficService, source: FakeAircraft
+) -> None:
+    source.result = [
+        plane(callsign="FAR1", lat=-22.9, lon=-43.2),
+        plane(callsign="CGH1", lat=-23.63, lon=-46.66, on_ground=True),
+        plane(callsign="GRU1", lat=-23.43, lon=-46.47, baro=1500.0),
+        plane(callsign="NOPOS", lat=None, lon=None),
+    ]
+    text = await traffic.describe_near("São Paulo", -23.55, -46.63, 50)
+    assert text.startswith("2 aircraft detected within 50 km of São Paulo")
+    assert "1 airborne, 1 on ground" in text
+    assert text.index("CGH1") < text.index("GRU1")
+    assert "GRU1 21 km away, at 1500 m" in text
+    assert "FAR1" not in text
+
+
+async def test_describe_near_says_when_nothing_is_close(
+    traffic: TrafficService, source: FakeAircraft
+) -> None:
+    source.result = [plane(lat=50.0, lon=8.6)]
+    text = await traffic.describe_near("São Paulo", -23.55, -46.63, 50)
+    assert text.startswith("No aircraft detected within 50 km of São Paulo")

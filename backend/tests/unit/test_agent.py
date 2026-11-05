@@ -115,3 +115,26 @@ async def test_history_sits_between_system_prompt_and_question() -> None:
     assert [m["role"] for m in messages] == ["system", "user", "assistant", "user"]
     assert messages[2]["content"] == "Clear skies at SBGL."
     assert messages[3]["content"] == "and at SBGR?"
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        '{"place": "X", "latitude": 95, "longitude": 0}',
+        '{"place": "X", "latitude": 0, "longitude": 0, "radius_km": 5000}',
+        '{"place": "X"}',
+    ],
+)
+async def test_count_aircraft_near_validates_coordinates_and_radius(arguments: str) -> None:
+    agent, aircraft = make_agent(FakeLLM())
+    result = await agent.tools.execute("count_aircraft_near", arguments)
+    assert result.startswith("Error: invalid arguments")
+    assert aircraft.calls == 0
+
+
+async def test_count_aircraft_near_defaults_to_a_50_km_radius() -> None:
+    agent, _ = make_agent(FakeLLM())
+    result = await agent.tools.execute(
+        "count_aircraft_near", '{"place": "São Paulo", "latitude": -23.55, "longitude": -46.63}'
+    )
+    assert result.startswith("1 aircraft detected within 50 km of São Paulo")

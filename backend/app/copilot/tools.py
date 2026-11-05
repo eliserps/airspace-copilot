@@ -22,6 +22,25 @@ class CountAircraftArgs(BaseModel):
         return normalise_region(value) if isinstance(value, str) else value
 
 
+DEFAULT_RADIUS_KM = 50
+MAX_RADIUS_KM = 500
+
+
+class CountAircraftNearArgs(BaseModel):
+    place: str = Field(max_length=100, description="Name of the city, airport or place.")
+    latitude: float = Field(ge=-90, le=90, description="Latitude of the place, decimal degrees.")
+    longitude: float = Field(
+        ge=-180, le=180, description="Longitude of the place, decimal degrees."
+    )
+    radius_km: float = Field(
+        default=DEFAULT_RADIUS_KM,
+        ge=5,
+        le=MAX_RADIUS_KM,
+        description=f"Search radius in kilometres. Default {DEFAULT_RADIUS_KM}; use more "
+        "for a state or a large metropolitan area.",
+    )
+
+
 def build_tools(traffic: TrafficService, metar: MetarSource) -> ToolRegistry:
     async def get_metar(args: GetMetarArgs) -> str:
         try:
@@ -34,6 +53,11 @@ def build_tools(traffic: TrafficService, metar: MetarSource) -> ToolRegistry:
 
     async def count_aircraft(args: CountAircraftArgs) -> str:
         return await traffic.describe(args.region)
+
+    async def count_aircraft_near(args: CountAircraftNearArgs) -> str:
+        return await traffic.describe_near(
+            args.place, args.latitude, args.longitude, args.radius_km
+        )
 
     return ToolRegistry(
         [
@@ -48,10 +72,17 @@ def build_tools(traffic: TrafficService, metar: MetarSource) -> ToolRegistry:
             Tool(
                 name="count_aircraft",
                 description="Get live aircraft currently detected over a region. "
-                "Use this when the user asks how many planes are flying somewhere, "
-                "or what traffic looks like in an area.",
+                "Use this for a continent, the whole world, or the region on the map.",
                 args=CountAircraftArgs,
                 handler=count_aircraft,
+            ),
+            Tool(
+                name="count_aircraft_near",
+                description="Get live aircraft within a radius of a point, closest first. "
+                "Use this when the user names a city, airport, state or any place smaller "
+                "than a continent. Pass the place's coordinates.",
+                args=CountAircraftNearArgs,
+                handler=count_aircraft_near,
             ),
         ]
     )

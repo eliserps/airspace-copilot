@@ -9,6 +9,7 @@ from app.copilot.agent import Agent
 from app.copilot.tools import build_tools
 from app.core.config import configure_tls, get_settings
 from app.llm.client import GroqClient
+from app.traffic.geo import distance_km
 from app.traffic.models import StateVector
 from app.traffic.regions import BoundingBox
 from app.traffic.service import TrafficService
@@ -41,6 +42,19 @@ def score(expected: dict[str, Any], calls: list[tuple[str, dict[str, Any]]]) -> 
         got = str(arguments.get(key, "")).strip().lower()
         if got != str(value).lower():
             return False, f"{key}={arguments.get(key)!r}, expected {value!r}"
+    near = expected.get("near")
+    if near:
+        try:
+            off = distance_km(
+                float(arguments["latitude"]),
+                float(arguments["longitude"]),
+                near["latitude"],
+                near["longitude"],
+            )
+        except (KeyError, TypeError, ValueError):
+            return False, f"no usable coordinates in {arguments}"
+        if off > near["within_km"]:
+            return False, f"point is {off:.0f} km from the expected place"
     return True, f"{name}({arguments})"
 
 
