@@ -22,7 +22,7 @@ An AI copilot that explains live air traffic and aviation weather in plain Engli
 
 🌦️ **Weather decoding**: `SBGR 091800Z 19011G21KT 6000…` explained in plain words
 
-💬 **Copilot chat**: *"Is the weather good for landing in Guarulhos?"*, then *"and in Galeão?"*, streamed as it's written
+💬 **Copilot chat**: *"Is the weather good for landing in Guarulhos?"*, then *"and in Galeão?"*, or *"How many planes are near São Paulo?"*, streamed as it's written
 
 📊 **Evaluation**: the weather decoder scored against hand-checked answers
 
@@ -34,11 +34,11 @@ An AI copilot that explains live air traffic and aviation weather in plain Engli
 
 🔑 **Groq API key** (runs the AI): [console.groq.com](https://console.groq.com)
 
-🛰️ **OpenSky client ID and secret** (flight data): [opensky-network.org](https://opensky-network.org) → Account → API Client
+🛰️ **OpenSky client ID and secret** (optional, flight data): [opensky-network.org](https://opensky-network.org) → Account → API Client. Without them the API uses OpenSky anonymously, with a much lower daily quota
 
 **Steps**
 
-**① Add your keys**: copy `backend/.env.example` to `backend/.env` and fill in `GROQ_API_KEY`, `OPENSKY_CLIENT_ID` and `OPENSKY_CLIENT_SECRET`
+**① Add your keys**: copy `backend/.env.example` to `backend/.env` and fill in `GROQ_API_KEY`, plus `OPENSKY_CLIENT_ID` and `OPENSKY_CLIENT_SECRET` if you have them
 
 **② Terminal 1, start the API**: `cd backend`, then `uv sync`, then `uv run uvicorn app.main:app --reload --port 8000`
 
@@ -92,7 +92,7 @@ Add any of these to `backend/.env` (all listed in `backend/.env.example`):
 
 ![The question passes guardrails, then the AI model either answers or asks the code to run a tool, up to 5 times](docs/agent-loop.svg)
 
-🔒 **Only 2 read-only tools**: the AI can't do anything beyond reading data
+🔒 **Only 3 read-only tools**: weather for an airport, traffic over a region, traffic within a radius of a place. The AI can't do anything beyond reading data
 
 🧾 **Tool schemas come from Pydantic models**: arguments are validated before anything runs
 
@@ -102,7 +102,7 @@ Add any of these to `backend/.env` (all listed in `backend/.env.example`):
 
 🛡️ **Guardrails flag manipulation**: suspicious questions are logged and answered safely ([why that's enough](docs/adr/0007-guardrails.md))
 
-⚡ **Answers stream token by token** over Server-Sent Events ([ADR 0005](docs/adr/0005-streaming-answers.md))
+⚡ **Answers stream token by token** over Server-Sent Events, and the chat shows which live data is being checked, e.g. *Looking for aircraft near São Paulo…* ([ADR 0005](docs/adr/0005-streaming-answers.md))
 
 🧵 **Follow-ups keep context**: the browser sends the last few turns with each question, and the API stays stateless ([ADR 0010](docs/adr/0010-client-sent-history.md))
 
@@ -110,7 +110,7 @@ Add any of these to `backend/.env` (all listed in `backend/.env.example`):
 
 📉 **Briefings send counts, not every aircraft**: about 200 tokens, even for the whole world
 
-♻️ **Briefings are reused** until traffic changes by about 10%
+♻️ **Briefings are reused** until traffic changes by about 10%, for at most 15 minutes
 
 🌦️ **Each weather report is decoded once**
 

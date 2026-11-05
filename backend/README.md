@@ -10,7 +10,7 @@ FastAPI app organised by domain. Routers only translate HTTP; services hold the 
 
 ❤️ **`GET /health`**: liveness, valid regions and languages
 
-🚦 **`GET /health/ready`**: readiness; `503` until the AI key is set
+🚦 **`GET /health/ready`**: readiness; `503` until the AI key is set. `opensky_access` says whether OpenSky is used with credentials or anonymously
 
 📈 **`GET /metrics`**: Prometheus metrics (requests by route, LLM tokens and latency, cache hits, upstream errors)
 
@@ -18,13 +18,13 @@ FastAPI app organised by domain. Routers only translate HTTP; services hold the 
 
 ✈️ **`GET /aircraft?region=`**: short text summary of traffic, cached 30 s
 
-📝 **`GET /briefing?region=&lang=`**: AI summary of the airspace 🤖, reused until traffic changes
+📝 **`GET /briefing?region=&lang=`**: AI summary of the airspace 🤖, reused until traffic changes (at most 15 min)
 
 🌦️ **`GET /weather/{icao}?lang=`**: raw METAR plus an AI explanation 🤖, once per report
 
 💬 **`POST /ask`**: copilot answer 🤖, never cached. Body: `{"question": "...", "region": "europe", "history": [{"role": "user", "content": "..."}]}` (`region` and `history` are optional; up to 8 earlier turns)
 
-⚡ **`POST /ask/stream`**: same as `/ask`, as Server-Sent Events: `meta` → `delta`… → `done` or `error`
+⚡ **`POST /ask/stream`**: same as `/ask`, as Server-Sent Events: `meta` → `delta` and `tool` (`{name, arguments}` each time live data is looked up)… → `done` or `error`
 
 🤖 = calls the AI and spends tokens
 
@@ -58,7 +58,7 @@ On `/ask/stream`, errors after the stream starts arrive as an `error` event with
 
 ✍️ **`briefing`, `decoded`, `answer`**: Markdown, so render it
 
-🕰️ **`stale`** on `/aircraft/map`: `true` means OpenSky is down and the data is up to 10 min old
+🕰️ **`stale`** on `/aircraft/map` and `/briefing`: `true` means OpenSky is down and the data is up to 10 min old
 
 🛡️ **`flagged`** on `/ask`: `true` means the question looked like manipulation; it was answered safely
 

@@ -7,17 +7,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versions follow
 ### Added
 - Copilot follow-ups keep context: `POST /ask` and `/ask/stream` accept an optional `history` of earlier turns.
 - GitHub Actions CI: lint, types, tests and build for both sides, plus an OpenAPI drift check.
+- `count_aircraft_near` copilot tool: traffic within a radius of a city, airport or any place, closest aircraft first.
+- `tool` event on `/ask/stream`; the chat shows which live data the copilot is checking.
+- `stale` on `/briefing`, shown as a badge in the Briefing tab.
+- `opensky_access` on `/health/ready`.
 
 ### Changed
 - One OpenSky call for the whole world every 30 s, filtered per region, instead of one call per region.
 - The METAR decoder sends the whole reference in the prompt instead of retrieving chunks.
 - `/health/ready` only checks that the AI model is configured.
+- OpenSky credentials are optional; without them the API is called anonymously.
+- OpenSky tokens are renewed from the `expires_in` the server returns instead of a fixed 25 minutes.
+- Briefings are reused for at most 15 minutes, and `aircraft_count` is always the current count.
 
 ### Removed
 - ChromaDB and the knowledge-base warm-up.
 
 ### Fixed
 - Flaky frontend test that read the page before the lazily loaded route had rendered.
+- Aircraft markers drawn above the aircraft detail card and other globe overlays.
+- Text the model wrote before a tool call ran straight into the final answer; steps are now separated.
+- Concurrent requests for the same METAR each called the model; they now share one call.
+- Briefings written from stale traffic did not say so.
 
 ## [2.0.0] - 2026-11-04
 
