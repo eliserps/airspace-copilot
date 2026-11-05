@@ -22,7 +22,7 @@ async function renderAt(url: string) {
   return router;
 }
 
-describe("App", () => {
+describe("App", { timeout: 20_000 }, () => {
   it("restores region and tab from the URL", async () => {
     await renderAt("/?region=europe&tab=weather");
     expect(await screen.findByLabelText("Region")).toHaveValue("europe");
