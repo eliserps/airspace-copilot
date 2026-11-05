@@ -28,6 +28,7 @@ export function BriefingTab({ region, regionLabel }: { region: RegionId; regionL
           regionLabel={regionLabel}
           aircraftCount={q.data.aircraft_count}
           generatedAt={q.data.generated_at}
+          stale={q.data.stale}
         />
       ) : null}
 

@@ -66,6 +66,7 @@ export const handlers = [
       aircraft_count: 1,
       briefing: "One aircraft detected.",
       generated_at: 1_700_000_000,
+      stale: false,
       source: "OpenSky (partial volunteer coverage)",
     }),
   ),

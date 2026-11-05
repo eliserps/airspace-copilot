@@ -1,6 +1,10 @@
 import pytest
 
-from app.briefing.service import BRIEFING_TTL_SECONDS, BriefingService
+from app.briefing.service import (
+    BRIEFING_MAX_REUSE_SECONDS,
+    BRIEFING_TTL_SECONDS,
+    BriefingService,
+)
 from app.briefing.summary import bucket, format_stats, summarize
 from tests.fakes import Clock, FakeLLM, plane, reply
 
@@ -60,3 +64,21 @@ async def test_empty_answer_is_not_cached() -> None:
     service = BriefingService(FakeLLM([reply(""), reply("text")]))
     assert (await service.generate([], "europe")).text == ""
     assert (await service.generate([], "europe")).text == "text"
+
+
+async def test_unchanged_traffic_is_rewritten_after_the_maximum_reuse_age() -> None:
+    llm, clock = FakeLLM([reply("old"), reply("new")]), Clock(1000.0)
+    service = BriefingService(llm, clock=clock)
+    await service.generate([plane()] * 100, "europe")
+    clock.advance(BRIEFING_MAX_REUSE_SECONDS + 1)
+    assert (await service.generate([plane()] * 100, "europe")).text == "new"
+
+
+async def test_stale_data_is_flagged_to_the_model_and_not_reused_once_fresh() -> None:
+    llm, clock = FakeLLM([reply("stale"), reply("fresh")]), Clock(1000.0)
+    service = BriefingService(llm, clock=clock)
+    await service.generate([plane()] * 100, "europe", stale=True)
+    assert "temporarily unavailable" in llm.calls[0][0][1]["content"]
+    clock.advance(BRIEFING_TTL_SECONDS + 1)
+    assert (await service.generate([plane()] * 100, "europe")).text == "fresh"
+    assert "temporarily unavailable" not in llm.calls[1][0][1]["content"]

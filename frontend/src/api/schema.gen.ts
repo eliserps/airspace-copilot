@@ -308,7 +308,7 @@ export interface components {
       language: string;
       /**
        * Aircraft Count
-       * @description Aircraft in the snapshot the briefing was written from.
+       * @description Aircraft in the current snapshot. A reused briefing may have been written from a count up to about 10% different.
        */
       aircraft_count: number;
       /**
@@ -321,6 +321,11 @@ export interface components {
        * @description Unix time (seconds) the briefing was generated; may be cached.
        */
       generated_at: number;
+      /**
+       * Stale
+       * @description True when the traffic data is the last good snapshot because OpenSky is failing.
+       */
+      stale: boolean;
       /** Source */
       source: string;
     };

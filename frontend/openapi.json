@@ -639,7 +639,7 @@
           "aircraft_count": {
             "type": "integer",
             "title": "Aircraft Count",
-            "description": "Aircraft in the snapshot the briefing was written from."
+            "description": "Aircraft in the current snapshot. A reused briefing may have been written from a count up to about 10% different."
           },
           "briefing": {
             "type": "string",
@@ -650,6 +650,11 @@
             "type": "number",
             "title": "Generated At",
             "description": "Unix time (seconds) the briefing was generated; may be cached."
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "description": "True when the traffic data is the last good snapshot because OpenSky is failing."
           },
           "source": {
             "type": "string",
@@ -663,6 +668,7 @@
           "aircraft_count",
           "briefing",
           "generated_at",
+          "stale",
           "source"
         ],
         "title": "BriefingResponse"

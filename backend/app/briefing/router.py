@@ -22,12 +22,13 @@ async def briefing(
     """Natural-language briefing of current traffic over a region."""
     key = resolve_region(region)
     snapshot = await traffic.snapshot(key)
-    result = await briefings.generate(snapshot.aircraft, key, lang)
+    result = await briefings.generate(snapshot.aircraft, key, lang, stale=snapshot.stale)
     return BriefingResponse(
         region=key,
         language=lang,
-        aircraft_count=result.aircraft_count,
+        aircraft_count=len(snapshot.aircraft),
         briefing=result.text,
         generated_at=result.generated_at,
+        stale=snapshot.stale,
         source=SOURCE,
     )

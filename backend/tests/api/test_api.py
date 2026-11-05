@@ -88,6 +88,7 @@ def test_briefing_count_comes_from_the_snapshot(client: TestClient, fakes: Fakes
     assert body["aircraft_count"] == 42
     assert body["briefing"] == "Busy skies."
     assert body["language"] == "pt"
+    assert body["stale"] is False
 
 
 def test_weather_rejects_malformed_icao(client: TestClient) -> None:

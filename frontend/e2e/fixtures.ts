@@ -46,6 +46,7 @@ export async function mockApi(page: Page) {
         aircraft_count: 2,
         briefing: "**2 aircraft** detected over South America. Coverage is partial.",
         generated_at: 1_700_000_000,
+        stale: false,
         source: "OpenSky (partial volunteer coverage)",
       },
     }),

@@ -14,6 +14,7 @@ from .summary import fingerprint, format_stats, summarize
 log = logging.getLogger(__name__)
 
 BRIEFING_TTL_SECONDS = 180
+BRIEFING_MAX_REUSE_SECONDS = 900
 
 SYSTEM_PROMPT = """You are an airspace analyst assistant.
 
@@ -25,6 +26,11 @@ STRICT RULES:
 - If the data is empty, say so plainly. Do not speculate.
 - Be concise and factual. No filler.
 """
+
+STALE_NOTE = (
+    "The live feed is temporarily unavailable, so this is the last snapshot received, "
+    "up to a few minutes old. Say so in the briefing.\n"
+)
 
 
 @dataclass(frozen=True)
@@ -43,7 +49,12 @@ class BriefingService:
         self._locks: KeyedLocks[tuple[str, Language]] = KeyedLocks()
 
     async def generate(
-        self, aircraft: Sequence[StateVector], region: str, language: Language = "en"
+        self,
+        aircraft: Sequence[StateVector],
+        region: str,
+        language: Language = "en",
+        *,
+        stale: bool = False,
     ) -> Briefing:
         stats = summarize(aircraft)
         key = (region.lower().strip(), language)
@@ -54,15 +65,16 @@ class BriefingService:
                 CACHE_LOOKUPS.labels("briefing", "hit").inc()
                 return cached.value
 
-            current = fingerprint(stats)
-            if cached and cached.value.fingerprint == current:
+            current = (*fingerprint(stats), stale)
+            reusable = cached and now - cached.value.generated_at < BRIEFING_MAX_REUSE_SECONDS
+            if cached and reusable and cached.value.fingerprint == current:
                 log.info("briefing %s unchanged, reusing", key)
                 CACHE_LOOKUPS.labels("briefing", "unchanged").inc()
                 return cached.value
             CACHE_LOOKUPS.labels("briefing", "miss").inc()
 
             prompt = f"""Write a short airspace briefing for: {region}
-Aggregated data for the aircraft currently detected:
+{STALE_NOTE if stale else ""}Aggregated data for the aircraft currently detected:
 {format_stats(stats)}
 Write the briefing in {LANGUAGE_NAMES[language]}. Cover:
 1. How many aircraft were detected
