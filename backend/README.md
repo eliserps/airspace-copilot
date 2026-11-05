@@ -10,11 +10,11 @@ FastAPI app organised by domain. Routers only translate HTTP; services hold the 
 
 ❤️ **`GET /health`**: liveness, valid regions and languages
 
-🚦 **`GET /health/ready`**: readiness; `503` until the knowledge base is loaded and the AI key is set
+🚦 **`GET /health/ready`**: readiness; `503` until the AI key is set
 
 📈 **`GET /metrics`**: Prometheus metrics (requests by route, LLM tokens and latency, cache hits, upstream errors)
 
-🗺️ **`GET /aircraft/map?region=`**: aircraft with coordinates for the map, cached 30 s
+🗺️ **`GET /aircraft/map?region=`**: aircraft with coordinates for the map, from one world snapshot cached 30 s
 
 ✈️ **`GET /aircraft?region=`**: short text summary of traffic, cached 30 s
 
@@ -22,7 +22,7 @@ FastAPI app organised by domain. Routers only translate HTTP; services hold the 
 
 🌦️ **`GET /weather/{icao}?lang=`**: raw METAR plus an AI explanation 🤖, once per report
 
-💬 **`POST /ask`**: copilot answer 🤖, never cached. Body: `{"question": "...", "region": "europe"}` (`region` is optional)
+💬 **`POST /ask`**: copilot answer 🤖, never cached. Body: `{"question": "...", "region": "europe", "history": [{"role": "user", "content": "..."}]}` (`region` and `history` are optional; up to 8 earlier turns)
 
 ⚡ **`POST /ask/stream`**: same as `/ask`, as Server-Sent Events: `meta` → `delta`… → `done` or `error`
 
@@ -72,11 +72,11 @@ On `/ask/stream`, errors after the stream starts arrive as an `error` event with
 
 🧠 **`app/llm/`**: `LLMClient` protocol, Groq client (with streaming), tool registry
 
-✈️ **`app/traffic/`**: regions, OpenSky client, `TrafficService` (cache, backoff, stale data)
+✈️ **`app/traffic/`**: regions, OpenSky client, `TrafficService` (one world fetch, cache, backoff, stale data)
 
 📝 **`app/briefing/`**: traffic summary and `BriefingService`
 
-🌦️ **`app/weather/`**: AWC client, knowledge base (RAG), `MetarDecoder`
+🌦️ **`app/weather/`**: AWC client, reference loader, `MetarDecoder`
 
 💬 **`app/copilot/`**: guardrails, tools, agent loop, `/ask` endpoints
 
@@ -100,4 +100,4 @@ Run from `backend/`. With an activated `.venv` instead of uv, drop the `uv run` 
 
 🧭 `uv run python -m evals.agent_eval --repeat 3`: agent tool-selection evaluation (spends tokens)
 
-📚 Edit `knowledge/` and delete `chroma_db/` to rebuild the index on the next start
+📚 Edit `knowledge/` and restart the API; the whole reference goes into every decode prompt

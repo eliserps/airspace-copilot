@@ -1,5 +1,6 @@
 # ✈️ airspace-copilot
 
+[![CI](https://github.com/eliserps/airspace-copilot/actions/workflows/ci.yml/badge.svg)](https://github.com/eliserps/airspace-copilot/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
@@ -21,7 +22,7 @@ An AI copilot that explains live air traffic and aviation weather in plain Engli
 
 🌦️ **Weather decoding**: `SBGR 091800Z 19011G21KT 6000…` explained in plain words
 
-💬 **Copilot chat**: *"Is the weather good for landing in Guarulhos?"*, streamed as it's written
+💬 **Copilot chat**: *"Is the weather good for landing in Guarulhos?"*, then *"and in Galeão?"*, streamed as it's written
 
 📊 **Evaluation**: the weather decoder scored against hand-checked answers
 
@@ -103,6 +104,8 @@ Add any of these to `backend/.env` (all listed in `backend/.env.example`):
 
 ⚡ **Answers stream token by token** over Server-Sent Events ([ADR 0005](docs/adr/0005-streaming-answers.md))
 
+🧵 **Follow-ups keep context**: the browser sends the last few turns with each question, and the API stays stateless ([ADR 0010](docs/adr/0010-client-sent-history.md))
+
 ## Saving AI tokens
 
 📉 **Briefings send counts, not every aircraft**: about 200 tokens, even for the whole world
@@ -111,7 +114,9 @@ Add any of these to `backend/.env` (all listed in `backend/.env.example`):
 
 🌦️ **Each weather report is decoded once**
 
-⏱️ **Flight data is cached for 30 s**, so all users share one OpenSky call
+⏱️ **One OpenSky call for the whole world every 30 s**, filtered per region and shared by all users ([ADR 0009](docs/adr/0009-single-world-fetch.md))
+
+📚 **The weather reference is small enough to send whole**, so there is no vector database to run ([ADR 0008](docs/adr/0008-reference-in-prompt.md))
 
 Every AI call logs its cost, e.g. `tokens briefing: prompt=412 completion=180 total=592`.
 
@@ -143,10 +148,12 @@ Run it from `backend/` with `uv run python -m evals.evaluate --repeat 3`. It spe
 
 ▶️ `make check` runs lint, types and tests for both sides (or see the commands in each README)
 
+🤖 **CI**: GitHub Actions runs the same checks, the frontend build and an OpenAPI drift check on every push and pull request
+
 ## Known limitations
 
 🌊 **Few aircraft over oceans**: OpenSky relies on volunteer ground receivers
 
-🤖 **The AI can still make mistakes**: RAG reduces errors but doesn't remove them
+🤖 **The AI can still make mistakes**: grounding it in the reference reduces errors but doesn't remove them
 
 🧮 **Single process**: caches and rate limits live in memory, so scaling out needs a shared store ([ADR 0002](docs/adr/0002-async-and-injected-clients.md))

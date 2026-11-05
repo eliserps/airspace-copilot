@@ -1,6 +1,6 @@
 # 0006. Serve stale traffic while OpenSky is failing
 
-**Status:** Accepted
+**Status:** Accepted. Per-region caching is amended by [0009](0009-single-world-fetch.md).
 
 ## Context
 

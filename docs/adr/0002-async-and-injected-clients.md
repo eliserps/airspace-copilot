@@ -1,6 +1,6 @@
 # 0002. Async I/O with injected clients
 
-**Status:** Accepted
+**Status:** Accepted. The ChromaDB part is superseded by [0008](0008-reference-in-prompt.md).
 
 ## Context
 
