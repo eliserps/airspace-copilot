@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 
 from app.weather.decoder import MetarDecoder
@@ -32,3 +34,22 @@ async def test_structured_decode_reports_invalid_json() -> None:
 async def test_structured_decode_returns_fields() -> None:
     decoder = MetarDecoder(FakeLLM([reply('{"station": "SBGR"}')]), REFERENCE)
     assert (await decoder.decode_structured(METAR))["station"] == "SBGR"
+
+
+async def test_concurrent_requests_for_the_same_report_share_one_llm_call() -> None:
+    llm = FakeLLM([reply("decoded")])
+    decoder = MetarDecoder(llm, REFERENCE)
+    results = await asyncio.gather(*(decoder.decode(METAR) for _ in range(3)))
+    assert results == ["decoded"] * 3
+    assert len(llm.calls) == 1
+
+
+async def test_a_failed_decode_is_shared_then_retried() -> None:
+    llm = FakeLLM([RuntimeError("model down"), reply("decoded")])
+    decoder = MetarDecoder(llm, REFERENCE)
+    results = await asyncio.gather(
+        decoder.decode(METAR), decoder.decode(METAR), return_exceptions=True
+    )
+    assert all(isinstance(r, RuntimeError) for r in results)
+    assert await decoder.decode(METAR) == "decoded"
+    assert len(llm.calls) == 2

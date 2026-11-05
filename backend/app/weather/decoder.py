@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import Any
 
@@ -7,6 +8,8 @@ from app.core.metrics import CACHE_LOOKUPS
 from app.llm.client import LLMClient
 
 from .knowledge import ReferenceDoc, format_reference
+
+type DecodeKey = tuple[str, Language]
 
 SYSTEM_PROMPT = """You are an aviation weather decoder.
 
@@ -61,15 +64,31 @@ class MetarDecoder:
     def __init__(self, llm: LLMClient, reference: list[ReferenceDoc], cache_size: int = 256):
         self.llm = llm
         self.reference = format_reference(reference)
-        self._cache: TimedCache[tuple[str, Language], str] = TimedCache(max_entries=cache_size)
+        self._cache: TimedCache[DecodeKey, str] = TimedCache(max_entries=cache_size)
+        self._inflight: dict[DecodeKey, asyncio.Task[str]] = {}
 
     async def decode(self, metar: str, language: Language = "en") -> str:
         key = (metar.strip(), language)
         if cached := self._cache.get(key):
             CACHE_LOOKUPS.labels("metar", "hit").inc()
             return cached.value
-        CACHE_LOOKUPS.labels("metar", "miss").inc()
 
+        task = self._inflight.get(key)
+        if task is None:
+            CACHE_LOOKUPS.labels("metar", "miss").inc()
+            task = asyncio.ensure_future(self._decode(key, metar, language))
+            self._inflight[key] = task
+            task.add_done_callback(lambda done: self._finish(key, done))
+        else:
+            CACHE_LOOKUPS.labels("metar", "shared").inc()
+        return await asyncio.shield(task)
+
+    def _finish(self, key: DecodeKey, task: asyncio.Task[str]) -> None:
+        self._inflight.pop(key, None)
+        if not task.cancelled():
+            task.exception()
+
+    async def _decode(self, key: DecodeKey, metar: str, language: Language) -> str:
         prompt = f"""Reference documentation:
 
 {self.reference}
