@@ -1,8 +1,9 @@
+import asyncio
 import time
 
 import httpx
 
-from app.core.cache import Clock, KeyedLocks, TimedCache
+from app.core.cache import Clock, TimedCache
 from app.core.metrics import CACHE_LOOKUPS, UPSTREAM_ERRORS
 
 from .models import Snapshot, StateVector
@@ -14,6 +15,7 @@ STALE_MAX_SECONDS = 600
 FAILURE_BACKOFF_SECONDS = 15
 RATE_LIMIT_BACKOFF_SECONDS = 60
 RATE_LIMIT_BACKOFF_MAX_SECONDS = 3600
+WORLD: RegionId = "world"
 
 
 def backoff_seconds(error: Exception) -> float:
@@ -31,37 +33,44 @@ class TrafficService:
         self.source = source
         self.clock = clock
         self._cache: TimedCache[RegionId, list[StateVector]] = TimedCache(clock=clock)
-        self._failures: dict[RegionId, tuple[float, Exception]] = {}
-        self._locks: KeyedLocks[RegionId] = KeyedLocks()
+        self._failure: tuple[float, Exception] | None = None
+        self._lock = asyncio.Lock()
 
     async def snapshot(self, region: str) -> Snapshot:
         key = resolve_region(region)
-        async with self._locks(key):
+        world = await self._world()
+        if key == WORLD:
+            return world
+        box = REGIONS[key]
+        aircraft = [p for p in world.aircraft if box.contains(p.latitude, p.longitude)]
+        return Snapshot(aircraft, world.fetched_at, world.stale)
+
+    async def _world(self) -> Snapshot:
+        async with self._lock:
             now = self.clock()
-            cached = self._cache.get(key)
+            cached = self._cache.get(WORLD)
 
             if cached and now - cached.stored_at < AIRCRAFT_TTL_SECONDS:
                 CACHE_LOOKUPS.labels("traffic", "hit").inc()
                 return Snapshot(cached.value, cached.stored_at, stale=False)
             CACHE_LOOKUPS.labels("traffic", "miss").inc()
 
-            failure = self._failures.get(key)
-            if failure and now < failure[0]:
-                return self._stale_or_raise(key, failure[1], now)
+            if self._failure and now < self._failure[0]:
+                return self._stale_or_raise(self._failure[1], now)
 
             try:
-                aircraft = await self.source.states(REGIONS[key])
+                aircraft = await self.source.states(REGIONS[WORLD])
             except httpx.HTTPError as error:
                 UPSTREAM_ERRORS.labels("opensky").inc()
-                self._failures[key] = (now + backoff_seconds(error), error)
-                return self._stale_or_raise(key, error, now)
+                self._failure = (now + backoff_seconds(error), error)
+                return self._stale_or_raise(error, now)
 
-            self._failures.pop(key, None)
-            entry = self._cache.set(key, aircraft)
+            self._failure = None
+            entry = self._cache.set(WORLD, aircraft)
             return Snapshot(aircraft, entry.stored_at, stale=False)
 
-    def _stale_or_raise(self, key: RegionId, error: Exception, now: float) -> Snapshot:
-        cached = self._cache.get(key)
+    def _stale_or_raise(self, error: Exception, now: float) -> Snapshot:
+        cached = self._cache.get(WORLD)
         if cached and now - cached.stored_at < STALE_MAX_SECONDS:
             CACHE_LOOKUPS.labels("traffic", "stale").inc()
             return Snapshot(cached.value, cached.stored_at, stale=True)

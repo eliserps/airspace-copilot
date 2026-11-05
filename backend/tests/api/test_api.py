@@ -57,12 +57,12 @@ def test_aircraft_map_drops_positionless_and_reports_staleness(
     client: TestClient, fakes: Fakes
 ) -> None:
     fakes.aircraft.result = [plane(icao24="a", baro=None, geo=500.0), plane(icao24="b", lat=None)]
-    body = client.get("/aircraft/map?region=EUROPE").json()
-    assert body["region"] == "europe"
+    body = client.get("/aircraft/map?region=SOUTH_AMERICA").json()
+    assert body["region"] == "south_america"
     assert body["count"] == 1
     assert body["aircraft"][0]["altitude_m"] == 500.0
     assert body["stale"] is False
-    assert body["bounds"]["lat_min"] == 35.0
+    assert body["bounds"]["lat_min"] == -56.0
 
 
 def test_opensky_rate_limit_maps_to_429(client: TestClient, fakes: Fakes) -> None:
@@ -74,14 +74,14 @@ def test_opensky_rate_limit_maps_to_429(client: TestClient, fakes: Fakes) -> Non
 
 def test_aircraft_summary(client: TestClient, fakes: Fakes) -> None:
     fakes.aircraft.result = [plane(callsign="GLO1")]
-    body = client.get("/aircraft?region=europe").json()
+    body = client.get("/aircraft?region=south_america").json()
     assert "GLO1" in body["summary"]
 
 
 def test_briefing_count_comes_from_the_snapshot(client: TestClient, fakes: Fakes) -> None:
     fakes.aircraft.result = [plane()] * 42
     fakes.llm.script = [reply("Busy skies.")]
-    body = client.get("/briefing?region=europe&lang=pt").json()
+    body = client.get("/briefing?region=south_america&lang=pt").json()
     assert body["aircraft_count"] == 42
     assert body["briefing"] == "Busy skies."
     assert body["language"] == "pt"

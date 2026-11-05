@@ -36,8 +36,8 @@ async def test_invalid_arguments_become_messages(arguments: str) -> None:
 
 async def test_region_argument_is_case_insensitive() -> None:
     agent, _ = make_agent(FakeLLM())
-    result = await agent.tools.execute("count_aircraft", '{"region": "EUROPE"}')
-    assert "1 aircraft detected over europe" in result
+    result = await agent.tools.execute("count_aircraft", '{"region": "SOUTH_AMERICA"}')
+    assert "1 aircraft detected over south_america" in result
 
 
 async def test_upstream_failure_becomes_a_message() -> None:
@@ -81,7 +81,7 @@ async def test_unknown_region_is_ignored() -> None:
 
 
 async def test_tool_result_is_fed_back_before_answering() -> None:
-    llm = FakeLLM([call("count_aircraft", '{"region": "europe"}'), reply("There is 1.")])
+    llm = FakeLLM([call("count_aircraft", '{"region": "south_america"}'), reply("There is 1.")])
     agent, _ = make_agent(llm)
     assert await agent.answer("how many?") == "There is 1."
     tool_message = llm.calls[1][0][-1]

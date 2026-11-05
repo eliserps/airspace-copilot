@@ -11,6 +11,13 @@ class BoundingBox(NamedTuple):
     lon_min: float
     lon_max: float
 
+    def contains(self, latitude: float | None, longitude: float | None) -> bool:
+        if latitude is None or longitude is None:
+            return False
+        return (
+            self.lat_min <= latitude <= self.lat_max and self.lon_min <= longitude <= self.lon_max
+        )
+
 
 REGIONS: dict[RegionId, BoundingBox] = {
     "south_america": BoundingBox(-56.0, 13.0, -82.0, -34.0),

@@ -90,9 +90,11 @@ class FakeLLM:
 class FakeAircraft:
     result: list[StateVector] | Exception = field(default_factory=list)
     calls: int = 0
+    boxes: list[BoundingBox] = field(default_factory=list)
 
     async def states(self, box: BoundingBox) -> list[StateVector]:
         self.calls += 1
+        self.boxes.append(box)
         if isinstance(self.result, Exception):
             raise self.result
         return self.result
