@@ -25,14 +25,14 @@ async function renderAt(url: string) {
 describe("App", () => {
   it("restores region and tab from the URL", async () => {
     await renderAt("/?region=europe&tab=weather");
-    expect(screen.getByLabelText("Region")).toHaveValue("europe");
+    expect(await screen.findByLabelText("Region")).toHaveValue("europe");
     expect(screen.getByRole("tab", { name: "Weather" })).toHaveAttribute("aria-selected", "true");
     expect(await screen.findByText(/EDDF 091800Z/)).toBeInTheDocument();
   });
 
   it("falls back to defaults for invalid search params", async () => {
     await renderAt("/?region=mars&tab=nope");
-    expect(screen.getByLabelText("Region")).toHaveValue("south_america");
+    expect(await screen.findByLabelText("Region")).toHaveValue("south_america");
     expect(screen.getByRole("tab", { name: "Copilot" })).toHaveAttribute("aria-selected", "true");
   });
 
@@ -50,7 +50,7 @@ describe("App", () => {
 
   it("shows a 404 page for unknown routes", async () => {
     await renderAt("/nowhere");
-    expect(screen.getByText("404")).toBeInTheDocument();
+    expect(await screen.findByText("404")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back to the map" })).toBeInTheDocument();
   });
 });
