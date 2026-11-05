@@ -32,7 +32,6 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_format: Literal["text", "json"] = "text"
 
-    chroma_path: Path = BACKEND_DIR / "chroma_db"
     knowledge_dir: Path = BACKEND_DIR / "knowledge"
 
     @field_validator("cors_origins", mode="before")

@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from app.container import Services, wire
 from app.core.config import Settings
 from app.main import create_app
-from tests.fakes import FakeAircraft, FakeKnowledge, FakeLLM, FakeMetar
+from tests.fakes import REFERENCE, FakeAircraft, FakeLLM, FakeMetar
 
 
 @pytest.fixture
@@ -20,16 +20,15 @@ class Fakes:
     llm: FakeLLM
     aircraft: FakeAircraft
     metar: FakeMetar
-    knowledge: FakeKnowledge
     services: Services
 
 
 @pytest.fixture
 def fakes() -> Fakes:
-    llm, aircraft, metar, knowledge = FakeLLM(), FakeAircraft(), FakeMetar(), FakeKnowledge()
+    llm, aircraft, metar = FakeLLM(), FakeAircraft(), FakeMetar()
     settings = Settings(_env_file=None, ask_rate_limit_per_minute=100)
-    services = wire(settings, llm=llm, aircraft=aircraft, metar=metar, knowledge=knowledge)
-    return Fakes(llm, aircraft, metar, knowledge, services)
+    services = wire(settings, llm=llm, aircraft=aircraft, metar=metar, reference=REFERENCE)
+    return Fakes(llm, aircraft, metar, services)
 
 
 @pytest.fixture

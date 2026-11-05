@@ -31,13 +31,10 @@ async def health() -> HealthResponse:
     "/health/ready",
     response_model=ReadinessResponse,
     responses={503: {"model": ReadinessResponse}},
-    description="Readiness check: the knowledge base is loaded and the AI model is configured.",
+    description="Readiness check: the AI model is configured.",
 )
 async def ready(services: ServicesDep) -> JSONResponse:
-    checks = {
-        "knowledge_base": services.knowledge is None or services.knowledge.ready,
-        "llm_configured": services.llm.configured,
-    }
+    checks = {"llm_configured": services.llm.configured}
     body = ReadinessResponse(status="ready" if all(checks.values()) else "starting", checks=checks)
     return JSONResponse(body.model_dump(), status_code=200 if body.status == "ready" else 503)
 

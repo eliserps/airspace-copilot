@@ -11,7 +11,7 @@ from app.llm.client import GroqClient, LLMClient
 from app.traffic.opensky import AircraftSource, OpenSkyClient
 from app.traffic.service import TrafficService
 from app.weather.decoder import MetarDecoder
-from app.weather.knowledge import KnowledgeBase, KnowledgeSearch
+from app.weather.knowledge import ReferenceDoc, load_reference
 from app.weather.metar import AviationWeatherClient, MetarSource
 
 HTTP_TIMEOUT = httpx.Timeout(30, connect=5)
@@ -28,7 +28,6 @@ class Services:
     ask_limiter: RateLimiter
     weather_limiter: RateLimiter
     http: httpx.AsyncClient | None = None
-    knowledge: KnowledgeBase | None = None
 
     async def aclose(self) -> None:
         if self.http is not None:
@@ -41,7 +40,7 @@ def wire(
     llm: LLMClient,
     aircraft: AircraftSource,
     metar: MetarSource,
-    knowledge: KnowledgeSearch,
+    reference: list[ReferenceDoc],
 ) -> Services:
     traffic = TrafficService(aircraft)
     return Services(
@@ -49,7 +48,7 @@ def wire(
         traffic=traffic,
         briefing=BriefingService(llm),
         metar=metar,
-        decoder=MetarDecoder(llm, knowledge),
+        decoder=MetarDecoder(llm, reference),
         agent=Agent(llm, build_tools(traffic, metar)),
         ask_limiter=RateLimiter("ask", settings.ask_rate_limit_per_minute),
         weather_limiter=RateLimiter("weather", settings.weather_rate_limit_per_minute),
@@ -58,14 +57,12 @@ def wire(
 
 def build_services(settings: Settings) -> Services:
     http = httpx.AsyncClient(timeout=HTTP_TIMEOUT)
-    knowledge = KnowledgeBase(settings.chroma_path, settings.knowledge_dir)
     services = wire(
         settings,
         llm=GroqClient(settings.groq_api_key, settings.llm_model, settings.llm_timeout_seconds),
         aircraft=OpenSkyClient(http, settings.opensky_client_id, settings.opensky_client_secret),
         metar=AviationWeatherClient(http),
-        knowledge=knowledge,
+        reference=load_reference(settings.knowledge_dir),
     )
     services.http = http
-    services.knowledge = knowledge
     return services

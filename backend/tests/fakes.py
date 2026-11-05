@@ -6,7 +6,7 @@ import httpx
 from app.llm.client import Completion, Message, StreamEvent, TextDelta, ToolCall, ToolSchema
 from app.traffic.models import StateVector
 from app.traffic.regions import BoundingBox
-from app.weather.knowledge import Chunk
+from app.weather.knowledge import ReferenceDoc
 
 
 def plane(
@@ -109,9 +109,4 @@ class FakeMetar:
         return report
 
 
-@dataclass
-class FakeKnowledge:
-    chunks: list[Chunk] = field(default_factory=lambda: [Chunk("## Wind\n...", "metar.md")])
-
-    async def search(self, query: str, n_results: int = 3) -> list[Chunk]:
-        return self.chunks[:n_results]
+REFERENCE = [ReferenceDoc("metar.md", "## Wind\n...")]

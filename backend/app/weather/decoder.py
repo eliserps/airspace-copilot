@@ -6,7 +6,7 @@ from app.core.config import LANGUAGE_NAMES, Language
 from app.core.metrics import CACHE_LOOKUPS
 from app.llm.client import LLMClient
 
-from .knowledge import Chunk, KnowledgeSearch
+from .knowledge import ReferenceDoc, format_reference
 
 SYSTEM_PROMPT = """You are an aviation weather decoder.
 
@@ -56,17 +56,11 @@ Rules for the values:
  never a gust.
 - Use null for absent values, not 0 and not "unknown"."""
 
-RETRIEVED_CHUNKS = 8
-
-
-def format_context(chunks: list[Chunk]) -> str:
-    return "\n\n---\n\n".join(f"[source: {c.source}]\n{c.text}" for c in chunks)
-
 
 class MetarDecoder:
-    def __init__(self, llm: LLMClient, knowledge: KnowledgeSearch, cache_size: int = 256):
+    def __init__(self, llm: LLMClient, reference: list[ReferenceDoc], cache_size: int = 256):
         self.llm = llm
-        self.knowledge = knowledge
+        self.reference = format_reference(reference)
         self._cache: TimedCache[tuple[str, Language], str] = TimedCache(max_entries=cache_size)
 
     async def decode(self, metar: str, language: Language = "en") -> str:
@@ -76,10 +70,9 @@ class MetarDecoder:
             return cached.value
         CACHE_LOOKUPS.labels("metar", "miss").inc()
 
-        chunks = await self.knowledge.search(metar, n_results=RETRIEVED_CHUNKS)
         prompt = f"""Reference documentation:
 
-{format_context(chunks)}
+{self.reference}
 
 ---
 
@@ -100,13 +93,11 @@ Explain each element, then give a one-line operational summary."""
     async def decode_structured(self, metar: str) -> dict[str, Any]:
         """Decodes a METAR into the fields scored by evals/evaluate.py."""
         if not metar.strip():
-            return {"_error": "empty METAR", "_retrieved_sources": []}
+            return {"_error": "empty METAR"}
 
-        chunks = await self.knowledge.search(metar, n_results=RETRIEVED_CHUNKS)
-        sources = [c.source for c in chunks]
         prompt = f"""Reference documentation:
 
-{format_context(chunks)}
+{self.reference}
 
 ---
 
@@ -127,10 +118,5 @@ Decode this METAR:
         try:
             decoded: dict[str, Any] = json.loads(completion.content)
         except json.JSONDecodeError as error:
-            return {
-                "_error": f"invalid JSON: {error}",
-                "_raw": completion.content,
-                "_retrieved_sources": sources,
-            }
-        decoded["_retrieved_sources"] = sources
+            return {"_error": f"invalid JSON: {error}", "_raw": completion.content}
         return decoded

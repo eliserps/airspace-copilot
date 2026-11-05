@@ -211,7 +211,7 @@ def test_ask_stream_reports_errors_as_events(client: TestClient, fakes: Fakes) -
 
 def test_ready_reports_checks(client: TestClient) -> None:
     body = client.get("/health/ready").json()
-    assert body == {"status": "ready", "checks": {"knowledge_base": True, "llm_configured": True}}
+    assert body == {"status": "ready", "checks": {"llm_configured": True}}
 
 
 def test_not_ready_without_llm_key(client: TestClient, fakes: Fakes) -> None:

@@ -1,4 +1,3 @@
-import threading
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -30,10 +29,6 @@ def create_app(settings: Settings | None = None, services: Services | None = Non
             return
         built = build_services(settings)
         app.state.services = built
-        if built.knowledge is not None:
-            threading.Thread(
-                target=built.knowledge.warm_up, name="rag-warm-up", daemon=True
-            ).start()
         try:
             yield
         finally:

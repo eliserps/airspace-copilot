@@ -16,7 +16,7 @@ from pathlib import Path
 from app.core.config import configure_tls, get_settings
 from app.llm.client import GroqClient
 from app.weather.decoder import MetarDecoder
-from app.weather.knowledge import KnowledgeBase
+from app.weather.knowledge import load_reference
 
 EVALS_DIR = Path(__file__).resolve().parent
 DATASET_PATH = EVALS_DIR / "golden_dataset.json"
@@ -97,7 +97,6 @@ async def evaluate_case(decoder: MetarDecoder, case: dict) -> dict:
         "metar": case["metar"],
         "fields": {},
         "error": actual.get("_error"),
-        "retrieved_sources": actual.get("_retrieved_sources", []),
     }
 
     if result["error"]:
@@ -154,7 +153,7 @@ async def main() -> int:
     configure_tls(settings)
     decoder = MetarDecoder(
         GroqClient(settings.groq_api_key, settings.llm_model, settings.llm_timeout_seconds),
-        KnowledgeBase(settings.chroma_path, settings.knowledge_dir),
+        load_reference(settings.knowledge_dir),
     )
 
     if not cases:
