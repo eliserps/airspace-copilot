@@ -94,6 +94,7 @@ export const pt: Record<keyof typeof en, string> = {
   "region.world": "Mundo",
   "traffic.truncated": "Mostrando {shown} de {total} aeronaves.",
   "legend.sampled": "amostra no mapa: {shown}",
+  "legend.imagery": "Imagens",
 
   "error.unreachable": "Não foi possível acessar a API. Verifique sua conexão.",
   "error.unknown_region": "Essa região não existe.",

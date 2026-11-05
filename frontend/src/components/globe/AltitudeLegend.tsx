@@ -28,6 +28,14 @@ export function AltitudeLegend({
           {t("source.label")}: {source}
         </span>
       ) : null}
+      <a
+        href="https://www.esri.com"
+        target="_blank"
+        rel="noreferrer"
+        className="font-mono text-[10px] text-muted-foreground/80 hover:text-foreground"
+      >
+        {t("legend.imagery")}: Esri, Maxar, Earthstar Geographics
+      </a>
     </div>
   );
 }

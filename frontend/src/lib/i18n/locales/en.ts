@@ -91,6 +91,7 @@ export const en = {
   "region.world": "World",
   "traffic.truncated": "Showing {shown} of {total} aircraft.",
   "legend.sampled": "map sample: {shown}",
+  "legend.imagery": "Imagery",
 
   "error.unreachable": "Could not reach the airspace API. Check your connection.",
   "error.unknown_region": "That region does not exist.",
