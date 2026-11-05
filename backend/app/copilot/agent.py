@@ -1,9 +1,11 @@
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 
 from app.llm.client import Completion, LLMClient, Message, TextDelta
 from app.llm.tools import ToolRegistry
 from app.traffic.regions import REGIONS
+
+from .guardrails import Turn
 
 log = logging.getLogger(__name__)
 
@@ -32,14 +34,22 @@ class Agent:
         self.tools = tools
         self.max_iterations = max_iterations
 
-    def initial_messages(self, question: str, region: str | None) -> list[Message]:
+    def initial_messages(
+        self, question: str, region: str | None, history: Sequence[Turn] = ()
+    ) -> list[Message]:
         system = SYSTEM_PROMPT
         if region in REGIONS:
             system += "\n" + REGION_CONTEXT.format(region=region)
-        return [{"role": "system", "content": system}, {"role": "user", "content": question}]
+        return [
+            {"role": "system", "content": system},
+            *({"role": t.role, "content": t.content} for t in history),
+            {"role": "user", "content": question},
+        ]
 
-    async def answer(self, question: str, region: str | None = None) -> str:
-        messages = self.initial_messages(question, region)
+    async def answer(
+        self, question: str, region: str | None = None, history: Sequence[Turn] = ()
+    ) -> str:
+        messages = self.initial_messages(question, region, history)
         seen: dict[tuple[str, str], str] = {}
         for step in range(self.max_iterations):
             completion = await self.llm.complete(
@@ -52,8 +62,10 @@ class Agent:
         final = await self.llm.complete(messages, label="agent")
         return final.content
 
-    async def stream(self, question: str, region: str | None = None) -> AsyncIterator[str]:
-        messages = self.initial_messages(question, region)
+    async def stream(
+        self, question: str, region: str | None = None, history: Sequence[Turn] = ()
+    ) -> AsyncIterator[str]:
+        messages = self.initial_messages(question, region, history)
         seen: dict[tuple[str, str], str] = {}
         for step in range(self.max_iterations):
             completion: Completion | None = None

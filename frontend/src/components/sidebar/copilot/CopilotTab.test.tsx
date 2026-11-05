@@ -36,7 +36,36 @@ describe("CopilotTab", () => {
     const user = setup();
     await user.click(screen.getByRole("button", { name: "Explain squawk 7700" }));
     await screen.findByText("ok");
-    expect(body).toEqual({ question: "Explain squawk 7700", region: "south_america" });
+    expect(body).toEqual({ question: "Explain squawk 7700", region: "south_america", history: [] });
+  });
+
+  it("sends earlier turns so follow-ups have context", async () => {
+    const bodies: unknown[] = [];
+    let answer = 0;
+    server.use(
+      http.post(api("/ask/stream"), async ({ request }) => {
+        bodies.push(await request.json());
+        answer += 1;
+        return sseResponse([
+          ["delta", { text: `Answer ${answer}` }],
+          ["done", {}],
+        ]);
+      }),
+    );
+    const user = setup();
+    const input = screen.getByRole("textbox");
+    await user.type(input, "Weather at SBGL?{Enter}");
+    await screen.findByText("Answer 1");
+    await user.type(input, "And SBGR?{Enter}");
+    await screen.findByText("Answer 2");
+    expect(bodies[1]).toEqual({
+      question: "And SBGR?",
+      region: "south_america",
+      history: [
+        { role: "user", content: "Weather at SBGL?" },
+        { role: "assistant", content: "Answer 1" },
+      ],
+    });
   });
 
   it("marks answers to flagged questions", async () => {

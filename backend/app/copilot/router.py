@@ -9,7 +9,7 @@ from fastapi.responses import StreamingResponse
 from app.core.errors import AppError, error_response
 from app.dependencies import AgentDep, limit_ask
 
-from .guardrails import CheckedQuestion, check_question
+from .guardrails import CheckedQuestion, Turn, check_question
 from .schemas import AskRequest, AskResponse
 
 log = logging.getLogger(__name__)
@@ -26,9 +26,12 @@ class NoAnswerError(AppError):
 
 
 def checked(payload: AskRequest) -> CheckedQuestion:
-    result = check_question(payload.question)
+    history = [Turn(t.role, t.content) for t in payload.history]
+    result = check_question(payload.question, history)
     if result.suspicious:
         log.warning("possible injection attempt: flags=%s", result.flags)
+    if result.history_flags:
+        log.warning("possible injection in history: flags=%s", result.history_flags)
     return result
 
 
@@ -36,7 +39,7 @@ def checked(payload: AskRequest) -> CheckedQuestion:
 async def ask(payload: AskRequest, agent: AgentDep) -> AskResponse:
     """Answers a free-form question using the tool-calling agent."""
     question = checked(payload)
-    answer = await agent.answer(question.question, region=payload.region)
+    answer = await agent.answer(question.question, region=payload.region, history=question.history)
     if not answer.strip():
         raise NoAnswerError()
     return AskResponse(question=question.original, answer=answer, flagged=question.suspicious)
@@ -60,7 +63,9 @@ async def ask_stream(payload: AskRequest, agent: AgentDep) -> StreamingResponse:
         yield sse("meta", {"flagged": question.suspicious})
         received = False
         try:
-            async for text in agent.stream(question.question, region=payload.region):
+            async for text in agent.stream(
+                question.question, region=payload.region, history=question.history
+            ):
                 received = received or bool(text.strip())
                 yield sse("delta", {"text": text})
             if not received:

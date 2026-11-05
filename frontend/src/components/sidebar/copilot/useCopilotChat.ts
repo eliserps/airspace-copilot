@@ -1,13 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RegionId } from "@/config";
-import { ApiError } from "@/api/client";
+import { ApiError, type ChatTurn } from "@/api/client";
 import { askStream } from "@/api/copilot";
 
 export type ChatMessage =
   | { id: string; role: "user"; text: string }
   | { id: string; role: "assistant"; text: string; flagged: boolean };
 
-type Request = { question: string; region: RegionId };
+type Request = { question: string; region: RegionId; history: ChatTurn[] };
+
+export const HISTORY_TURNS = 6;
+export const MAX_TURN_CHARS = 2000;
+
+export function toHistory(messages: ChatMessage[]): ChatTurn[] {
+  return messages
+    .slice(-HISTORY_TURNS)
+    .map((m) => ({ role: m.role, content: m.text.slice(0, MAX_TURN_CHARS) }));
+}
 
 export function useCopilotChat(region: RegionId) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -62,11 +71,11 @@ export function useCopilotChat(region: RegionId) {
     (question: string) => {
       const q = question.trim();
       if (!q || pending) return;
+      last.current = { question: q, region, history: toHistory(messages) };
       setMessages((m) => [...m, { id: crypto.randomUUID(), role: "user", text: q }]);
-      last.current = { question: q, region };
       void run(last.current);
     },
-    [pending, region, run],
+    [messages, pending, region, run],
   );
 
   const retry = useCallback(() => {

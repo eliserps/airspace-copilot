@@ -2,6 +2,7 @@ import httpx
 import pytest
 
 from app.copilot.agent import SYSTEM_PROMPT, Agent
+from app.copilot.guardrails import Turn
 from app.copilot.tools import build_tools
 from app.traffic.service import TrafficService
 from tests.fakes import FakeAircraft, FakeLLM, FakeMetar, call, plane, reply
@@ -103,3 +104,14 @@ async def test_stream_yields_text_after_tools() -> None:
     agent, _ = make_agent(llm)
     chunks = [chunk async for chunk in agent.stream("how many?")]
     assert "".join(chunks).strip() == "One plane."
+
+
+async def test_history_sits_between_system_prompt_and_question() -> None:
+    llm = FakeLLM([reply("ok")])
+    agent, _ = make_agent(llm)
+    history = [Turn("user", "weather at SBGL?"), Turn("assistant", "Clear skies at SBGL.")]
+    await agent.answer("and at SBGR?", history=history)
+    messages = llm.calls[0][0]
+    assert [m["role"] for m in messages] == ["system", "user", "assistant", "user"]
+    assert messages[2]["content"] == "Clear skies at SBGL."
+    assert messages[3]["content"] == "and at SBGR?"

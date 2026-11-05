@@ -8,6 +8,7 @@ export type AircraftMapResponse = Schemas["AircraftMapResponse"];
 export type BriefingResponse = Schemas["BriefingResponse"];
 export type WeatherResponse = Schemas["WeatherResponse"];
 export type AskRequest = Schemas["AskRequest"];
+export type ChatTurn = Schemas["ChatTurn"];
 export type Lang = NonNullable<paths["/briefing"]["get"]["parameters"]["query"]>["lang"] & string;
 
 export type ErrorDetails = Record<string, string | number>;

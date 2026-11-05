@@ -61,10 +61,18 @@ class GuardrailRejection(InvalidInputError):
 
 
 @dataclass(frozen=True)
+class Turn:
+    role: str
+    content: str
+
+
+@dataclass(frozen=True)
 class CheckedQuestion:
     question: str
     original: str
     flags: list[str] = field(default_factory=list)
+    history: list[Turn] = field(default_factory=list)
+    history_flags: list[str] = field(default_factory=list)
 
     @property
     def suspicious(self) -> bool:
@@ -82,7 +90,22 @@ def detect_injection(text: str) -> list[str]:
     return sorted({label for pattern, label in COMPILED_PATTERNS if pattern.search(text)})
 
 
-def check_question(text: str | None) -> CheckedQuestion:
+def check_history(turns: list[Turn]) -> tuple[list[Turn], list[str]]:
+    checked: list[Turn] = []
+    flags: set[str] = set()
+    for turn in turns:
+        content = normalise(turn.content)
+        if not content:
+            continue
+        turn_flags = detect_injection(content)
+        flags.update(turn_flags)
+        if turn_flags and turn.role == "user":
+            content = wrap_untrusted(content)
+        checked.append(Turn(turn.role, content))
+    return checked, sorted(flags)
+
+
+def check_question(text: str | None, history: list[Turn] | None = None) -> CheckedQuestion:
     cleaned = normalise(text or "")
     if not cleaned:
         raise GuardrailRejection("empty_question", "Question cannot be empty.")
@@ -92,10 +115,13 @@ def check_question(text: str | None) -> CheckedQuestion:
             f"Question is too long ({len(cleaned)} characters, maximum {MAX_QUESTION_LENGTH}).",
         )
     flags = detect_injection(cleaned)
+    checked_history, history_flags = check_history(history or [])
     return CheckedQuestion(
         question=wrap_untrusted(cleaned) if flags else cleaned,
         original=text or "",
         flags=flags,
+        history=checked_history,
+        history_flags=history_flags,
     )
 
 

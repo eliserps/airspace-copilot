@@ -1,6 +1,16 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field, field_validator
 
 from app.traffic.regions import REGIONS, RegionId, normalise_region
+
+MAX_HISTORY_TURNS = 8
+MAX_TURN_LENGTH = 2000
+
+
+class ChatTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(max_length=MAX_TURN_LENGTH)
 
 
 class AskRequest(BaseModel):
@@ -14,6 +24,11 @@ class AskRequest(BaseModel):
         default=None,
         description='Map region the user is viewing, so "how many planes here?" resolves.',
         examples=["south_america"],
+    )
+    history: list[ChatTurn] = Field(
+        default_factory=list,
+        max_length=MAX_HISTORY_TURNS,
+        description="Earlier turns of this conversation, oldest first, so follow-ups resolve.",
     )
 
     @field_validator("region", mode="before")

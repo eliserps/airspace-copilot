@@ -34,7 +34,7 @@
           "meta"
         ],
         "summary": "Ready",
-        "description": "Readiness check: the knowledge base is loaded and the AI model is configured.",
+        "description": "Readiness check: the AI model is configured.",
         "operationId": "ready_health_ready_get",
         "responses": {
           "200": {
@@ -555,6 +555,15 @@
             "examples": [
               "south_america"
             ]
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/ChatTurn"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "title": "History",
+            "description": "Earlier turns of this conversation, oldest first, so follow-ups resolve."
           }
         },
         "type": "object",
@@ -657,6 +666,29 @@
           "source"
         ],
         "title": "BriefingResponse"
+      },
+      "ChatTurn": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatTurn"
       },
       "HTTPValidationError": {
         "properties": {

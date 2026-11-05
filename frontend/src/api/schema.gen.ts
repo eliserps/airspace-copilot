@@ -33,7 +33,7 @@ export interface paths {
     };
     /**
      * Ready
-     * @description Readiness check: the knowledge base is loaded and the AI model is configured.
+     * @description Readiness check: the AI model is configured.
      */
     get: operations["ready_health_ready_get"];
     put?: never;
@@ -264,6 +264,11 @@ export interface components {
       region?:
         | ("south_america" | "north_america" | "europe" | "africa" | "asia" | "oceania" | "world")
         | null;
+      /**
+       * History
+       * @description Earlier turns of this conversation, oldest first, so follow-ups resolve.
+       */
+      history?: components["schemas"]["ChatTurn"][];
     };
     /** AskResponse */
     AskResponse: {
@@ -318,6 +323,16 @@ export interface components {
       generated_at: number;
       /** Source */
       source: string;
+    };
+    /** ChatTurn */
+    ChatTurn: {
+      /**
+       * Role
+       * @enum {string}
+       */
+      role: "user" | "assistant";
+      /** Content */
+      content: string;
     };
     /** HTTPValidationError */
     HTTPValidationError: {
