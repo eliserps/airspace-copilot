@@ -9,6 +9,7 @@ from fastapi.responses import StreamingResponse
 from app.core.errors import AppError, error_response
 from app.dependencies import AgentDep, limit_ask
 
+from .agent import ToolUse
 from .guardrails import CheckedQuestion, Turn, check_question
 from .schemas import AskRequest, AskResponse
 
@@ -49,12 +50,23 @@ def sse(event: str, data: dict[str, Any]) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
+def tool_event(use: ToolUse) -> str:
+    try:
+        arguments = json.loads(use.arguments or "{}")
+    except json.JSONDecodeError:
+        arguments = {}
+    if not isinstance(arguments, dict):
+        arguments = {}
+    return sse("tool", {"name": use.name, "arguments": arguments})
+
+
 @router.post(
     "/ask/stream",
     response_class=StreamingResponse,
     responses={200: {"content": {"text/event-stream": {}}}},
-    description="Same as /ask, streamed as Server-Sent Events: `meta`, `delta`..., "
-    "then `done` or `error`.",
+    description="Same as /ask, streamed as Server-Sent Events: `meta`, then `delta` text "
+    "chunks and a `tool` event each time the agent looks up live data, then `done` or "
+    "`error`.",
 )
 async def ask_stream(payload: AskRequest, agent: AgentDep) -> StreamingResponse:
     question = checked(payload)
@@ -63,11 +75,14 @@ async def ask_stream(payload: AskRequest, agent: AgentDep) -> StreamingResponse:
         yield sse("meta", {"flagged": question.suspicious})
         received = False
         try:
-            async for text in agent.stream(
+            async for event in agent.stream(
                 question.question, region=payload.region, history=question.history
             ):
-                received = received or bool(text.strip())
-                yield sse("delta", {"text": text})
+                if isinstance(event, ToolUse):
+                    yield tool_event(event)
+                    continue
+                received = received or bool(event.text.strip())
+                yield sse("delta", {"text": event.text})
             if not received:
                 raise NoAnswerError()
             yield sse("done", {})

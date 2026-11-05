@@ -155,7 +155,7 @@ export interface paths {
     put?: never;
     /**
      * Ask Stream
-     * @description Same as /ask, streamed as Server-Sent Events: `meta`, `delta`..., then `done` or `error`.
+     * @description Same as /ask, streamed as Server-Sent Events: `meta`, then `delta` text chunks and a `tool` event each time the agent looks up live data, then `done` or `error`.
      */
     post: operations["ask_stream_ask_stream_post"];
     delete?: never;

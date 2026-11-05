@@ -2,8 +2,11 @@ import json
 
 import groq
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 
+from app.copilot.agent import ToolUse
+from app.copilot.router import sse, tool_event
 from app.core.errors import LLMNotConfiguredError
 from tests.conftest import Fakes
 from tests.fakes import call, http_error, plane, reply
@@ -221,6 +224,7 @@ def test_ask_stream_sends_deltas_then_done(client: TestClient, fakes: Fakes) -> 
     assert response.headers["content-type"].startswith("text/event-stream")
     events = read_events(response.text)
     assert events[0] == ("meta", {"flagged": False})
+    assert events[1] == ("tool", {"name": "count_aircraft", "arguments": {"region": "europe"}})
     text = "".join(str(data["text"]) for name, data in events if name == "delta")
     assert text.strip() == "One plane over Europe."
     assert events[-1] == ("done", {})
@@ -251,3 +255,10 @@ def test_metrics_label_requests_by_route_template(client: TestClient, fakes: Fak
     body = client.get("/metrics").text
     assert 'http_requests_total{method="GET",route="/weather/{icao}",status="404"}' in body
     assert "llm_tokens_total" in body
+
+
+@pytest.mark.parametrize("raw", ["{not json", "[1, 2]", ""])
+def test_tool_event_tolerates_malformed_arguments(raw: str) -> None:
+    assert tool_event(ToolUse("get_metar", raw)) == sse(
+        "tool", {"name": "get_metar", "arguments": {}}
+    )

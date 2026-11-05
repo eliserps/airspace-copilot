@@ -1,5 +1,6 @@
 import logging
 from collections.abc import AsyncIterator, Sequence
+from dataclasses import dataclass
 
 from app.llm.client import Completion, LLMClient, Message, TextDelta
 from app.llm.tools import ToolRegistry
@@ -10,6 +11,16 @@ from .guardrails import Turn
 log = logging.getLogger(__name__)
 
 MAX_ITERATIONS = 5
+STEP_BREAK = "\n\n"
+
+
+@dataclass(frozen=True, slots=True)
+class ToolUse:
+    name: str
+    arguments: str
+
+
+AgentEvent = TextDelta | ToolUse
 
 SYSTEM_PROMPT = """You are an airspace assistant.
 
@@ -67,23 +78,32 @@ class Agent:
 
     async def stream(
         self, question: str, region: str | None = None, history: Sequence[Turn] = ()
-    ) -> AsyncIterator[str]:
+    ) -> AsyncIterator[AgentEvent]:
         messages = self.initial_messages(question, region, history)
         seen: dict[tuple[str, str], str] = {}
-        for step in range(self.max_iterations):
+        use_tools = True
+        needs_break = False
+        for step in range(self.max_iterations + 1):
+            use_tools = use_tools and step < self.max_iterations
+            tools = self.tools.schemas() if use_tools else None
             completion: Completion | None = None
-            async for event in self.llm.stream(messages, tools=self.tools.schemas(), label="agent"):
+            wrote = False
+            async for event in self.llm.stream(messages, tools=tools, label="agent"):
                 if isinstance(event, TextDelta):
-                    yield event.text
+                    if needs_break:
+                        yield TextDelta(STEP_BREAK)
+                        needs_break = False
+                    wrote = True
+                    yield event
                 else:
                     completion = event
-            if completion is None or not completion.tool_calls:
+            if not use_tools or completion is None or not completion.tool_calls:
                 return
+            needs_break = needs_break or wrote
+            for call in completion.tool_calls:
+                yield ToolUse(call.name, call.arguments)
             if await self._run_tools(messages, completion, seen, step):
-                break
-        async for event in self.llm.stream(messages, label="agent"):
-            if isinstance(event, TextDelta):
-                yield event.text
+                use_tools = False
 
     async def _run_tools(
         self,

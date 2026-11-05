@@ -1,6 +1,7 @@
 import asyncio
 
 from app.container import build_services
+from app.copilot.agent import ToolUse
 from app.core.config import Language, configure_tls, get_settings
 from app.core.logging import configure_logging
 
@@ -36,8 +37,11 @@ async def main() -> None:
         print("\n--- COPILOT ---")
         for question in QUESTIONS:
             print(f"\n> {question}")
-            async for chunk in services.agent.stream(question, REGION):
-                print(chunk, end="", flush=True)
+            async for event in services.agent.stream(question, REGION):
+                if isinstance(event, ToolUse):
+                    print(f"[{event.name} {event.arguments}]")
+                else:
+                    print(event.text, end="", flush=True)
             print()
     finally:
         await services.aclose()

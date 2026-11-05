@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { RegionId } from "@/config";
 import { ApiError, type ChatTurn } from "@/api/client";
-import { askStream } from "@/api/copilot";
+import { askStream, type ToolActivity } from "@/api/copilot";
 
 export type ChatMessage =
   | { id: string; role: "user"; text: string }
@@ -23,6 +23,7 @@ export function useCopilotChat(region: RegionId) {
   const [pending, setPending] = useState(false);
   const [streamingId, setStreamingId] = useState<string | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
+  const [activity, setActivity] = useState<ToolActivity | null>(null);
   const controller = useRef<AbortController | null>(null);
   const last = useRef<Request | null>(null);
 
@@ -42,7 +43,10 @@ export function useCopilotChat(region: RegionId) {
       for await (const event of askStream(request, ctrl.signal)) {
         if (event.type === "meta") flagged = event.flagged;
         else if (event.type === "error") throw event.error;
+        else if (event.type === "tool")
+          setActivity({ name: event.name, arguments: event.arguments });
         else if (event.type === "delta") {
+          setActivity(null);
           const chunk = event.text;
           if (!started) {
             started = true;
@@ -63,6 +67,7 @@ export function useCopilotChat(region: RegionId) {
       if (controller.current === ctrl) {
         setPending(false);
         setStreamingId(null);
+        setActivity(null);
       }
     }
   }, []);
@@ -82,5 +87,5 @@ export function useCopilotChat(region: RegionId) {
     if (last.current && !pending) void run(last.current);
   }, [pending, run]);
 
-  return { messages, pending, streamingId, error, send, retry };
+  return { messages, pending, streamingId, activity, error, send, retry };
 }

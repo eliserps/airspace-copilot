@@ -1,9 +1,10 @@
 import httpx
 import pytest
 
-from app.copilot.agent import SYSTEM_PROMPT, Agent
+from app.copilot.agent import STEP_BREAK, SYSTEM_PROMPT, Agent, ToolUse
 from app.copilot.guardrails import Turn
 from app.copilot.tools import build_tools
+from app.llm.client import Completion, TextDelta, ToolCall
 from app.traffic.service import TrafficService
 from tests.fakes import FakeAircraft, FakeLLM, FakeMetar, call, plane, reply
 
@@ -99,11 +100,38 @@ async def test_repeated_call_forces_a_final_answer() -> None:
     assert llm.calls[-1][1] is None, "final call must offer no tools"
 
 
-async def test_stream_yields_text_after_tools() -> None:
+async def stream_events(agent: Agent, question: str) -> list[TextDelta | ToolUse]:
+    return [event async for event in agent.stream(question)]
+
+
+def streamed_text(events: list[TextDelta | ToolUse]) -> str:
+    return "".join(e.text for e in events if isinstance(e, TextDelta))
+
+
+async def test_stream_announces_tools_then_yields_the_answer() -> None:
     llm = FakeLLM([call("count_aircraft", '{"region": "europe"}'), reply("One plane.")])
     agent, _ = make_agent(llm)
-    chunks = [chunk async for chunk in agent.stream("how many?")]
-    assert "".join(chunks).strip() == "One plane."
+    events = await stream_events(agent, "how many?")
+    assert events[0] == ToolUse("count_aircraft", '{"region": "europe"}')
+    assert streamed_text(events).strip() == "One plane."
+
+
+async def test_stream_separates_text_written_before_a_tool_call() -> None:
+    preamble = Completion("Let me check.", [ToolCall("c1", "count_aircraft", '{"region": "asia"}')])
+    llm = FakeLLM([preamble, reply("One plane.")])
+    agent, _ = make_agent(llm)
+    text = streamed_text(await stream_events(agent, "how many?"))
+    assert text == "Let me check. " + STEP_BREAK + "One plane. "
+
+
+async def test_stream_repeated_call_forces_a_final_answer_without_tools() -> None:
+    same = call("count_aircraft", '{"region": "europe"}')
+    llm = FakeLLM([same, same, reply("done")])
+    agent, aircraft = make_agent(llm)
+    events = await stream_events(agent, "how many?")
+    assert streamed_text(events).strip() == "done"
+    assert aircraft.calls == 1
+    assert llm.calls[-1][1] is None
 
 
 async def test_history_sits_between_system_prompt_and_question() -> None:

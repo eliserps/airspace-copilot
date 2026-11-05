@@ -5,6 +5,7 @@ import { ErrorState } from "@/components/ui/state/ErrorState";
 import { LoadingState } from "@/components/ui/state/LoadingState";
 import { useI18n } from "@/lib/i18n/context";
 import { useErrorMessage } from "@/lib/i18n/useErrorMessage";
+import { activityLabel } from "./activityLabel";
 import { ChatInput } from "./ChatInput";
 import { ChatMessage } from "./ChatMessage";
 import { CopilotWelcome } from "./CopilotWelcome";
@@ -18,9 +19,13 @@ export function CopilotTab({ regionId, regionLabel }: { regionId: RegionId; regi
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [chat.messages, chat.pending]);
+  }, [chat.messages, chat.pending, chat.activity]);
 
-  const waitingForFirstToken = chat.pending && chat.streamingId === null;
+  const busyLabel = chat.activity
+    ? activityLabel(chat.activity, t)
+    : chat.pending && chat.streamingId === null
+      ? t("copilot.thinking")
+      : null;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -42,7 +47,7 @@ export function CopilotTab({ regionId, regionLabel }: { regionId: RegionId; regi
           </AnimatePresence>
         </ul>
 
-        {waitingForFirstToken ? <LoadingState label={t("copilot.thinking")} /> : null}
+        {busyLabel ? <LoadingState label={busyLabel} /> : null}
         {chat.error ? (
           <ErrorState message={errorMessage(chat.error, "copilot.failed")} onRetry={chat.retry} />
         ) : null}

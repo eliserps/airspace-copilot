@@ -83,6 +83,38 @@ describe("CopilotTab", () => {
     expect(await screen.findByText("Flagged")).toBeInTheDocument();
   });
 
+  it("shows which live data the copilot is checking until the answer arrives", async () => {
+    const encoder = new TextEncoder();
+    let release = () => {};
+    const released = new Promise<void>((resolve) => (release = resolve));
+    server.use(
+      http.post(api("/ask/stream"), () => {
+        const body = new ReadableStream<Uint8Array>({
+          async start(controller) {
+            const send = (event: string, data: unknown) =>
+              controller.enqueue(
+                encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
+              );
+            send("meta", { flagged: false });
+            send("tool", { name: "count_aircraft_near", arguments: { place: "São Paulo" } });
+            await released;
+            send("delta", { text: "Twelve planes." });
+            send("done", {});
+            controller.close();
+          },
+        });
+        return new HttpResponse(body, { headers: { "Content-Type": "text/event-stream" } });
+      }),
+    );
+    const user = setup();
+    await user.type(screen.getByRole("textbox"), "Planes over São Paulo?{Enter}");
+
+    expect(await screen.findByText("Looking for aircraft near São Paulo…")).toBeInTheDocument();
+    release();
+    expect(await screen.findByText("Twelve planes.")).toBeInTheDocument();
+    expect(screen.queryByText(/Looking for aircraft/)).not.toBeInTheDocument();
+  });
+
   it("shows stream errors and retries the same question", async () => {
     let attempts = 0;
     server.use(
