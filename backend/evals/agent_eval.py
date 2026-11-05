@@ -20,6 +20,8 @@ RESULTS_PATH = EVALS_DIR / "agent_results.json"
 
 
 class NoAircraft:
+    authenticated = True
+
     async def states(self, box: BoundingBox) -> list[StateVector]:
         return []
 

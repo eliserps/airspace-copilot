@@ -33,7 +33,7 @@ export interface paths {
     };
     /**
      * Ready
-     * @description Readiness check: the AI model is configured.
+     * @description Readiness check: the AI model is configured. Also reports whether OpenSky is used with credentials or anonymously.
      */
     get: operations["ready_health_ready_get"];
     put?: never;
@@ -365,6 +365,12 @@ export interface components {
       checks: {
         [key: string]: boolean;
       };
+      /**
+       * Opensky Access
+       * @description `anonymous` when no OpenSky credentials are set; it works with a lower daily quota.
+       * @enum {string}
+       */
+      opensky_access: "authenticated" | "anonymous";
     };
     /** ValidationError */
     ValidationError: {

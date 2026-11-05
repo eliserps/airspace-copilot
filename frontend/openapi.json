@@ -34,7 +34,7 @@
           "meta"
         ],
         "summary": "Ready",
-        "description": "Readiness check: the AI model is configured.",
+        "description": "Readiness check: the AI model is configured. Also reports whether OpenSky is used with credentials or anonymously.",
         "operationId": "ready_health_ready_get",
         "responses": {
           "200": {
@@ -747,12 +747,22 @@
             },
             "type": "object",
             "title": "Checks"
+          },
+          "opensky_access": {
+            "type": "string",
+            "enum": [
+              "authenticated",
+              "anonymous"
+            ],
+            "title": "Opensky Access",
+            "description": "`anonymous` when no OpenSky credentials are set; it works with a lower daily quota."
           }
         },
         "type": "object",
         "required": [
           "status",
-          "checks"
+          "checks",
+          "opensky_access"
         ],
         "title": "ReadinessResponse"
       },

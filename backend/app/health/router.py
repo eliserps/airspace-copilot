@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -19,6 +21,10 @@ class HealthResponse(BaseModel):
 class ReadinessResponse(BaseModel):
     status: str = Field(description="`ready`, or `starting` while a check is still failing.")
     checks: dict[str, bool]
+    opensky_access: Literal["authenticated", "anonymous"] = Field(
+        description="`anonymous` when no OpenSky credentials are set; it works with a lower "
+        "daily quota."
+    )
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -31,11 +37,16 @@ async def health() -> HealthResponse:
     "/health/ready",
     response_model=ReadinessResponse,
     responses={503: {"model": ReadinessResponse}},
-    description="Readiness check: the AI model is configured.",
+    description="Readiness check: the AI model is configured. Also reports whether "
+    "OpenSky is used with credentials or anonymously.",
 )
 async def ready(services: ServicesDep) -> JSONResponse:
     checks = {"llm_configured": services.llm.configured}
-    body = ReadinessResponse(status="ready" if all(checks.values()) else "starting", checks=checks)
+    body = ReadinessResponse(
+        status="ready" if all(checks.values()) else "starting",
+        checks=checks,
+        opensky_access="authenticated" if services.traffic.source.authenticated else "anonymous",
+    )
     return JSONResponse(body.model_dump(), status_code=200 if body.status == "ready" else 503)
 
 

@@ -239,7 +239,18 @@ def test_ask_stream_reports_errors_as_events(client: TestClient, fakes: Fakes) -
 
 def test_ready_reports_checks(client: TestClient) -> None:
     body = client.get("/health/ready").json()
-    assert body == {"status": "ready", "checks": {"llm_configured": True}}
+    assert body == {
+        "status": "ready",
+        "checks": {"llm_configured": True},
+        "opensky_access": "authenticated",
+    }
+
+
+def test_ready_reports_anonymous_opensky_access(client: TestClient, fakes: Fakes) -> None:
+    fakes.aircraft.authenticated = False
+    body = client.get("/health/ready").json()
+    assert body["status"] == "ready"
+    assert body["opensky_access"] == "anonymous"
 
 
 def test_not_ready_without_llm_key(client: TestClient, fakes: Fakes) -> None:

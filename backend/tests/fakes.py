@@ -91,6 +91,7 @@ class FakeAircraft:
     result: list[StateVector] | Exception = field(default_factory=list)
     calls: int = 0
     boxes: list[BoundingBox] = field(default_factory=list)
+    authenticated: bool = True
 
     async def states(self, box: BoundingBox) -> list[StateVector]:
         self.calls += 1
